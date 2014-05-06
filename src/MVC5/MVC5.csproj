@@ -14,7 +14,7 @@
     <RootNamespace>FinApps.SSO.MVC5</RootNamespace>
     <AssemblyName>FinApps.SSO.MVC5</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
-    <MvcBuildViews>false</MvcBuildViews>
+    <MvcBuildViews>true</MvcBuildViews>
     <UseIISExpress>true</UseIISExpress>
     <IISExpressSSLPort />
     <IISExpressAnonymousAuthentication />
