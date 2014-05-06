@@ -127,4 +127,36 @@ Install REST API client:
 
     Install-Package FinApps.ApiClient
 
+### Sample Usage
 
+The examples below show how to have your application create a user using the FinApps .NET API client:
+
+    using FinApps.SSO.RestClient;
+    using FinApps.SSO.RestClient.Annotations;
+    using FinApps.SSO.RestClient.Enum;
+    using FinApps.SSO.RestClient.Model;
+    
+    var user = new FinAppsUser
+            {
+                FirstName = "John",
+                LastName = "Smith",
+                Email = "user@example.com",
+                Password = "Password@2",
+                PostalCode = "10001"
+            };
+    var client = new FinAppsRestClient(
+                baseUrl: "https://finapps.com/api/v1/",
+                companyIdentifier: "ACME Inc.",
+                companyToken: "my-secret-token!");
+                
+    ServiceResult serviceResult = await _client.NewUser(user);
+    if(serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess){
+        string userToken = serviceResult.GetUserToken();
+    }
+    
+    
+    
+    
+    
+    
+    
