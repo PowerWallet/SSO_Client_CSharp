@@ -165,7 +165,7 @@ Install REST API client:
 
     var credentials = new FinAppsCredentials
             {
-                Email = "email@example.com",
+                Email = "user@example.com",
                 FinAppsUserToken = "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
             };
     var client = new FinAppsRestClient(
