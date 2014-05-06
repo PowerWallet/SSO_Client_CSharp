@@ -7,7 +7,6 @@ using FinApps.SSO.RestClient;
 using FinApps.SSO.RestClient.Annotations;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
-using Newtonsoft.Json;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -16,14 +15,13 @@ namespace FinApps.SSO.MVC5.Controllers
     {
         #region private members and constructors
 
-        private readonly IFinAppsRestClient _client;
         private readonly UserManager<ApplicationUser> _userManager;
+        private IConfig _configuration;
+        private IFinAppsRestClient _client;
 
         [UsedImplicitly]
         public PfmController()
-            : this(
-                new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())),
-                new Config(), null)
+            : this(new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())), null, null)
         {
         }
 
@@ -31,32 +29,24 @@ namespace FinApps.SSO.MVC5.Controllers
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
+            _configuration = config;
+            _client = finAppsRestClient;
+        }
 
-            IConfig configuration = config ?? new Config();
+        private FinAppsRestClient InitializeApiClient()
+        {
+            if (_configuration == null)
+                _configuration = new Config();
 
-            if (finAppsRestClient != null)
-            {
-                _client = finAppsRestClient;
-            }
-            else
-            {
-                //string apiBaseUrl = configuration.Get("FinAppsLiveUrl");
-                string baseUrl = configuration.Get("FinAppsDemoUrl");
-                string companyIdentifier = configuration.Get("FinAppsCompanyIdentifier");
-                string companytoken = configuration.Get("FinAppsCompanyToken");
-
-                _client = new FinAppsRestClient(baseUrl, companyIdentifier, companytoken);
-            }
+            return new FinAppsRestClient(
+                baseUrl: _configuration.Get("FinAppsDemoUrl"),
+                companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
+                companyToken: _configuration.Get("FinAppsCompanyToken"));
         }
 
         private static bool IsValidUser(ApplicationUser user)
         {
             return user != null && !string.IsNullOrWhiteSpace(user.FinAppsUserToken);
-        }
-
-        private static bool IsValidServiceResult(ServiceResult serviceResult)
-        {
-            return serviceResult != null && serviceResult.Result == ResultCodeTypes.SUCCESSFUL;
         }
 
         #endregion
@@ -67,19 +57,17 @@ namespace FinApps.SSO.MVC5.Controllers
             if (!IsValidUser(user))
                 return View("Error");
 
-            ServiceResult serviceResult = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
-            if (!IsValidServiceResult(serviceResult))
+            if (_client == null)
+                _client = InitializeApiClient();
+            
+            string redirectUrl = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+            if (string.IsNullOrEmpty(redirectUrl))
                 return View("Error");
-
-            var ssoResponse = JsonConvert.DeserializeObject<NewSessionResponse>(serviceResult.ResultObject.ToString());
-            if (ssoResponse == null)
-                return View("Error");
-
+            
             Uri absoluteUrl;
-            if (Uri.TryCreate(ssoResponse.RedirectToUrl, UriKind.Absolute, out absoluteUrl))
-                return Redirect(absoluteUrl.ToString());
-
-            return View("Error");
+            return Uri.TryCreate(redirectUrl, UriKind.Absolute, out absoluteUrl)
+                ? Redirect(absoluteUrl.ToString())
+                : (ActionResult) View("Error");
         }
     }
 }

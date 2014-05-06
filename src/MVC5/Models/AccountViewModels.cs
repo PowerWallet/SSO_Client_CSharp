@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using FinApps.SSO.RestClient;
+using FinApps.SSO.RestClient.Model;
 
 namespace FinApps.SSO.MVC5.Models
 {

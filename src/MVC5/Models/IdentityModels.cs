@@ -1,4 +1,4 @@
-﻿using FinApps.SSO.RestClient;
+﻿using FinApps.SSO.RestClient.Model;
 using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace FinApps.SSO.MVC5.Models
@@ -27,18 +27,6 @@ namespace FinApps.SSO.MVC5.Models
             {
                 Email = applicationUser.UserName,
                 FinAppsUserToken = applicationUser.FinAppsUserToken
-            };
-        }
-
-        public static FinAppsUser ToFinAppsUser(this ApplicationUser applicationUser, string password)
-        {
-            return new FinAppsUser
-            {
-                FirstName = applicationUser.FirstName,
-                LastName = applicationUser.LastName,
-                Email = applicationUser.UserName,
-                Password = password,
-                PostalCode = applicationUser.PostalCode
             };
         }
     }

@@ -5,25 +5,28 @@ using FinApps.SSO.MVC5.Models;
 using FinApps.SSO.MVC5.Services;
 using FinApps.SSO.RestClient;
 using FinApps.SSO.RestClient.Annotations;
+using FinApps.SSO.RestClient.Enum;
+using FinApps.SSO.RestClient.Model;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
-using Newtonsoft.Json;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
     [Authorize]
     public class AccountController : Controller
     {
-        private IFinAppsRestClient _client;
+        #region private members and constructors
+
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IConfig _configuration;
+        private IConfig _configuration;
+        private IFinAppsRestClient _client;
 
         [UsedImplicitly]
         public AccountController()
             : this(
-                new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())),
-                new Config(), null)
+                new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())), null, null
+                )
         {
         }
 
@@ -31,25 +34,35 @@ namespace FinApps.SSO.MVC5.Controllers
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
-
-            _configuration = config ?? new Config();
-
-            if (finAppsRestClient != null)
-            {
-                _client = finAppsRestClient;
-            }
+            _configuration = config;
+            _client = finAppsRestClient;
         }
 
         private FinAppsRestClient InitializeApiClient()
         {
-            //string apiBaseUrl = configuration.Get("FinAppsLiveUrl");
-            string baseUrl = _configuration.Get("FinAppsDemoUrl");
-            string companyIdentifier = _configuration.Get("FinAppsCompanyIdentifier");
-            string companytoken = _configuration.Get("FinAppsCompanyToken");
+            if (_configuration == null)
+                _configuration = new Config();
 
-            return new FinAppsRestClient(baseUrl, companyIdentifier, companytoken);
+            return new FinAppsRestClient(
+                baseUrl: _configuration.Get("FinAppsDemoUrl"),
+                companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
+                companyToken: _configuration.Get("FinAppsCompanyToken"));
         }
-        
+
+        private void ValidateServiceResult(ServiceResult serviceResult)
+        {
+            if (serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess)
+                return;
+
+            var errorMessage = serviceResult != null
+                ? serviceResult.ResultString // => extended error information available on serviceResult.ResultObject
+                : "Unexpected error. Please try again.";
+
+            ModelState.AddModelError("", errorMessage);
+        }
+
+        #endregion
+
         //
         // GET: /Account/Login
         [AllowAnonymous]
@@ -102,19 +115,19 @@ namespace FinApps.SSO.MVC5.Controllers
             if (_client == null)
                 _client = InitializeApiClient();
             ServiceResult serviceResult = await _client.NewUser(model.ToFinAppsUser());
-            ValidateServiceResult(serviceResult);
 
+            ValidateServiceResult(serviceResult);
             if (!ModelState.IsValid)
                 return View(model);
 
-            var ssoResponse = JsonConvert.DeserializeObject<NewFinAppsUserResponse>(serviceResult.ResultObject.ToString());
-            if (ssoResponse == null)
+            string userToken = serviceResult.GetUserToken();
+            if (string.IsNullOrWhiteSpace(userToken))
             {
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
-
-            ApplicationUser user = model.ToApplicationUser(finAppsUserToken: ssoResponse.UserToken);
+            
+            ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
             IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
             if (identityResult.Succeeded)
             {
@@ -125,18 +138,6 @@ namespace FinApps.SSO.MVC5.Controllers
 
             // If we got this far, something failed, redisplay form
             return View(model);
-        }
-
-        private void ValidateServiceResult(ServiceResult serviceResult)
-        {
-            if (serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess)
-                return;
-
-            var errorMessage = serviceResult != null
-                ? serviceResult.ResultString
-                : "Unexpected error. Please try again.";
-
-            ModelState.AddModelError("", errorMessage);
         }
 
         //

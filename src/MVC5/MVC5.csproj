@@ -178,8 +178,6 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\PfmController.cs" />
-    <Compile Include="Models\NewFinAppsUserResponse.cs" />
-    <Compile Include="Models\NewSessionResponse.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

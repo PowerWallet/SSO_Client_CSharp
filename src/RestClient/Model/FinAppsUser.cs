@@ -1,4 +1,4 @@
-﻿namespace FinApps.SSO.RestClient
+﻿namespace FinApps.SSO.RestClient.Model
 {
     public class FinAppsUser
     {

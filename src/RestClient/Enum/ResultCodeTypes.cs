@@ -1,4 +1,4 @@
-﻿namespace FinApps.SSO.RestClient
+﻿namespace FinApps.SSO.RestClient.Enum
 {
     public enum ResultCodeTypes
     {

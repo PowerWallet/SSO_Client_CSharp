@@ -1,6 +1,6 @@
 using FinApps.SSO.RestClient.Annotations;
 
-namespace FinApps.SSO.MVC5.Models
+namespace FinApps.SSO.RestClient.Model
 {
     [UsedImplicitly]
     public class NewSessionResponse

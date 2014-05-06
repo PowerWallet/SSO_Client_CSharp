@@ -6,6 +6,8 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading.Tasks;
 using FinApps.SSO.RestClient.Annotations;
+using FinApps.SSO.RestClient.Enum;
+using FinApps.SSO.RestClient.Model;
 using Newtonsoft.Json;
 
 namespace FinApps.SSO.RestClient
@@ -16,7 +18,7 @@ namespace FinApps.SSO.RestClient
         Task<ServiceResult> NewUser(FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        Task<ServiceResult> NewSession(FinAppsCredentials finAppsCredentials, string clientIp);
+        Task<string> NewSession(FinAppsCredentials finAppsCredentials, string clientIp);
     }
 
     [UsedImplicitly]
@@ -76,7 +78,7 @@ namespace FinApps.SSO.RestClient
         }
 
         [UsedImplicitly]
-        public async Task<ServiceResult> NewSession(FinAppsCredentials finAppsCredentials, string clientIp)
+        public async Task<string> NewSession(FinAppsCredentials finAppsCredentials, string clientIp)
         {
             var postData = new List<KeyValuePair<string, string>>
             {
@@ -87,7 +89,11 @@ namespace FinApps.SSO.RestClient
             string base64Parameter = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(parameter));
             var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", base64Parameter);
 
-            return await PostAsync(postData, "users/login", authenticationHeaderValue);
+            ServiceResult serviceResult = await PostAsync(postData, "users/login", authenticationHeaderValue);
+            if (serviceResult == null || serviceResult.Result != ResultCodeTypes.SUCCESSFUL)
+                return null;
+           
+            return serviceResult.GetRedirectUrl();
         }
 
         private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource)

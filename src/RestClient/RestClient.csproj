@@ -41,13 +41,15 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FinAppsCredentials.cs" />
+    <Compile Include="Enum\ResultCodeTypes.cs" />
     <Compile Include="FinAppsRestClient.cs" />
+    <Compile Include="Model\FinAppsCredentials.cs" />
+    <Compile Include="Model\FinAppsUser.cs" />
+    <Compile Include="Model\NewSessionResponse.cs" />
+    <Compile Include="Model\NewUserResponse.cs" />
+    <Compile Include="Model\ServiceResult.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResultCodeTypes.cs" />
-    <Compile Include="ServiceResult.cs" />
-    <Compile Include="FinAppsUser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
