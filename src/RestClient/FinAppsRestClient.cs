@@ -13,12 +13,6 @@ namespace FinApps.SSO.RestClient
     public interface IFinAppsRestClient
     {
         [UsedImplicitly]
-        string CompanyIdentifier { get; set; }
-
-        [UsedImplicitly]
-        string CompanyToken { get; set; }
-
-        [UsedImplicitly]
         Task<ServiceResult> NewUser(FinAppsUser finAppsUser);
 
         [UsedImplicitly]
@@ -28,26 +22,16 @@ namespace FinApps.SSO.RestClient
     [UsedImplicitly]
     public class FinAppsRestClient : IFinAppsRestClient
     {
-        private readonly HttpClient _httpClient;
+        const string ApiVersion = "1";
+
+        private HttpClient _httpClient;
 
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
         {
-            const string apiVersion = "1.0.0";
 
             CompanyIdentifier = companyIdentifier;
             CompanyToken = companyToken;
-
-            _httpClient = new HttpClient
-            {
-                BaseAddress = new Uri(string.Format("{0}{1}", baseUrl, apiVersion))
-            };
-            _httpClient.DefaultRequestHeaders.Accept.Clear();
-            _httpClient.Timeout = TimeSpan.FromSeconds(60.0);
-            _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-charset", "utf-8");
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UserAgent);
-            _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", FinAppsToken);
+            BaseUrl = baseUrl;
         }
 
         private string FinAppsToken
@@ -71,13 +55,12 @@ namespace FinApps.SSO.RestClient
             }
         }
 
-        [UsedImplicitly]
-        public string CompanyIdentifier { get; set; }
+        private string CompanyIdentifier { get; set; }
 
-        [UsedImplicitly]
-        public string CompanyToken { get; set; }
+        private string CompanyToken { get; set; }
 
-
+        private string BaseUrl { get; set; }
+        
         [UsedImplicitly]
         public async Task<ServiceResult> NewUser(FinAppsUser finAppsUser)
         {
@@ -96,22 +79,40 @@ namespace FinApps.SSO.RestClient
         [UsedImplicitly]
         public async Task<ServiceResult> NewSession(FinAppsCredentials finAppsCredentials, string clientIp)
         {
-            var parameter = string.Format("{0}:{1}", finAppsCredentials.Email, finAppsCredentials.FinAppsUserToken);
-            var base64Parameter = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(parameter));
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", base64Parameter);
-
             var postData = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("ClientIp", clientIp),
             };
 
-            return await PostAsync(postData, "users/login");
+            string parameter = string.Format("{0}:{1}", finAppsCredentials.Email, finAppsCredentials.FinAppsUserToken);
+            string base64Parameter = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(parameter));
+            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", base64Parameter);
+
+            return await PostAsync(postData, "users/login", authenticationHeaderValue);
         }
 
         private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource)
         {
+            return await PostAsync(postData, resource, null);
+        }
+
+        private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource, AuthenticationHeaderValue authenticationHeaderValue)
+        {
             try
             {
+                _httpClient = new HttpClient {BaseAddress = new Uri(string.Format("{0}v{1}/", BaseUrl, ApiVersion))};
+                _httpClient.DefaultRequestHeaders.Accept.Clear();
+                _httpClient.Timeout = TimeSpan.FromSeconds(60.0);
+                _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-charset", "utf-8");
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UserAgent);
+                _httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", FinAppsToken);
+                if (authenticationHeaderValue != null)
+                {
+                    _httpClient.DefaultRequestHeaders.Authorization = authenticationHeaderValue;
+                }
+
                 HttpContent content = new FormUrlEncodedContent(postData);
                 HttpResponseMessage response = await _httpClient.PostAsync(requestUri: resource, content: content);
                 if (!response.IsSuccessStatusCode)
@@ -132,7 +133,6 @@ namespace FinApps.SSO.RestClient
                     ResultString = ex.Message
                 };
             }
-
             catch (TaskCanceledException ex)
             {
                 return new ServiceResult
