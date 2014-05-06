@@ -15,8 +15,9 @@ namespace FinApps.SSO.MVC5.Controllers
     [Authorize]
     public class AccountController : Controller
     {
-        private readonly IFinAppsRestClient _client;
+        private IFinAppsRestClient _client;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfig _configuration;
 
         [UsedImplicitly]
         public AccountController()
@@ -31,24 +32,24 @@ namespace FinApps.SSO.MVC5.Controllers
         {
             _userManager = userManager;
 
-            IConfig configuration = config ?? new Config();
+            _configuration = config ?? new Config();
 
             if (finAppsRestClient != null)
             {
                 _client = finAppsRestClient;
             }
-            else
-            {
-                //string apiBaseUrl = configuration.Get("FinAppsLiveUrl");
-                string baseUrl = configuration.Get("FinAppsDemoUrl");
-                string companyIdentifier = configuration.Get("FinAppsCompanyIdentifier");
-                string companytoken = configuration.Get("FinAppsCompanyToken");
-
-                _client = new FinAppsRestClient(baseUrl, companyIdentifier, companytoken);
-            }
         }
 
+        private FinAppsRestClient InitializeApiClient()
+        {
+            //string apiBaseUrl = configuration.Get("FinAppsLiveUrl");
+            string baseUrl = _configuration.Get("FinAppsDemoUrl");
+            string companyIdentifier = _configuration.Get("FinAppsCompanyIdentifier");
+            string companytoken = _configuration.Get("FinAppsCompanyToken");
 
+            return new FinAppsRestClient(baseUrl, companyIdentifier, companytoken);
+        }
+        
         //
         // GET: /Account/Login
         [AllowAnonymous]
@@ -98,23 +99,22 @@ namespace FinApps.SSO.MVC5.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var user = model.ToApplicationUser();
-            ServiceResult serviceResult = await _client.NewUser(user.ToFinAppsUser(model.Password));
+            if (_client == null)
+                _client = InitializeApiClient();
+            ServiceResult serviceResult = await _client.NewUser(model.ToFinAppsUser());
             ValidateServiceResult(serviceResult);
 
             if (!ModelState.IsValid)
                 return View(model);
 
-            var ssoResponse =
-                JsonConvert.DeserializeObject<NewFinAppsUserResponse>(serviceResult.ResultObject.ToString());
+            var ssoResponse = JsonConvert.DeserializeObject<NewFinAppsUserResponse>(serviceResult.ResultObject.ToString());
             if (ssoResponse == null)
             {
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
 
-            user.FinAppsUserToken = ssoResponse.UserToken;
-
+            ApplicationUser user = model.ToApplicationUser(finAppsUserToken: ssoResponse.UserToken);
             IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
             if (identityResult.Succeeded)
             {

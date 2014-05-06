@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using FinApps.SSO.RestClient;
 
 namespace FinApps.SSO.MVC5.Models
 {
@@ -79,7 +80,7 @@ namespace FinApps.SSO.MVC5.Models
 
     public static class RegisterViewModelExtensions
     {
-        public static ApplicationUser ToApplicationUser(this RegisterViewModel model)
+        public static ApplicationUser ToApplicationUser(this RegisterViewModel model, string finAppsUserToken = null)
         {
             return new ApplicationUser
             {
@@ -87,7 +88,20 @@ namespace FinApps.SSO.MVC5.Models
                 Email = model.UserName,
                 PostalCode = model.PostalCode,
                 FirstName = model.FirstName,
-                LastName = model.LastName
+                LastName = model.LastName,
+                FinAppsUserToken = finAppsUserToken
+            };
+        }
+
+        public static FinAppsUser ToFinAppsUser(this RegisterViewModel model)
+        {
+            return new FinAppsUser
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.UserName,
+                Password = model.Password,
+                PostalCode = model.PostalCode
             };
         }
     }

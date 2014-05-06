@@ -28,10 +28,9 @@ namespace FinApps.SSO.RestClient
 
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
         {
-
+            BaseUrl = baseUrl;
             CompanyIdentifier = companyIdentifier;
             CompanyToken = companyToken;
-            BaseUrl = baseUrl;
         }
 
         private string FinAppsToken
