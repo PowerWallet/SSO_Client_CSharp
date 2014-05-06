@@ -113,11 +113,10 @@ To install a FinApps library using the Package Manager dialog, first open the di
 
 When the package manager dialog opens simply search the online catalog for _‘FinApps’_.  The screen shot below shows the results returned from the NuGet catalog:
 
-[Missing image]
+![](![](http://i.imgur.com/lQHpfdM.png)
 
 Simply click the Install button next to the FinApps package you want to add to your project and watch as NuGet downloads the FinApps library package (and its dependencies) and adds the proper  references to your project.
 
-[Missing image]
 
 #### Installing via the Package Manager Console
 
@@ -129,7 +128,7 @@ Install REST API client:
 
 ### Sample Usage
 
-The examples below show how to have your application create a user using the FinApps .NET API client:
+#### Create a user:
 
     using FinApps.SSO.RestClient;
     using FinApps.SSO.RestClient.Annotations;
@@ -153,6 +152,28 @@ The examples below show how to have your application create a user using the Fin
     if(serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess){
         string userToken = serviceResult.GetUserToken();
     }
+    
+
+
+#### Initiate a FinApps session:
+
+    using FinApps.SSO.MVC5.Models;
+    using FinApps.SSO.MVC5.Services;
+    using FinApps.SSO.RestClient;
+    using FinApps.SSO.RestClient.Annotations;
+    
+
+    var credentials = new FinAppsCredentials
+            {
+                Email = "email@example.com",
+                FinAppsUserToken = "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+            };
+    var client = new FinAppsRestClient(
+                baseUrl: "https://finapps.com/api/v1/",
+                companyIdentifier: "ACME Inc.",
+                companyToken: "my-secret-token!");            
+                
+    string redirectUrl = await _client.NewSession(credentials, Request.UserHostAddress);
     
     
     
