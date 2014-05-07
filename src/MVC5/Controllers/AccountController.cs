@@ -133,19 +133,19 @@ namespace FinApps.SSO.MVC5.Controllers
             string userToken = serviceResult.GetUserToken();
             if (string.IsNullOrWhiteSpace(userToken))
             {
-                Logger.Warn("AccountController.Register => Error: Invalid UserToken result.");
+                Logger.Warn("Register => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
 
-            Logger.Info("AccountController.Register => UserToken[{0}]", userToken);
+            Logger.Info("Register => UserToken[{0}]", userToken);
             
             ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
             IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
             if (identityResult.Succeeded)
             {
                 await SignInAsync(user, isPersistent: false);
-                Logger.Info("AccountController.Register => Redirecting to {0}", Url.Action("Index", "Home"));
+                Logger.Info("Register => Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
             AddErrors(identityResult);
@@ -162,7 +162,7 @@ namespace FinApps.SSO.MVC5.Controllers
             {
                 errorMessage.Append(error.ErrorMessage);
             }
-            Logger.Info("AccountController.Register => Error: Invalid ModelState. {0}", errorMessage.ToString());
+            Logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
         }
 
         //

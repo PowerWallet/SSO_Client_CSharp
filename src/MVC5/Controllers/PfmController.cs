@@ -58,7 +58,7 @@ namespace FinApps.SSO.MVC5.Controllers
             ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
             if (!IsValidUser(user))
             {
-                Logger.Warn("PfmController.Index => Error: Not a valid user.");
+                Logger.Error("Index => Error: Not a valid user.");
                 return View("Error");
             }
 
@@ -68,18 +68,18 @@ namespace FinApps.SSO.MVC5.Controllers
             string redirectUrl = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
             if (string.IsNullOrEmpty(redirectUrl))
             {
-                Logger.Warn("PfmController.Index => Error: Invalid redirect URL.");
+                Logger.Error("Index => Error: Invalid redirect URL.");
                 return View("Error");
             }
             
             Uri absoluteUrl;
             if (!Uri.TryCreate(redirectUrl, UriKind.Absolute, out absoluteUrl))
             {
-                Logger.Warn("PfmController.Index => Error: Invalid redirect URL.");
+                Logger.Error("Index => Error: Invalid redirect URL.");
                 return (ActionResult) View("Error");
             }
             
-            Logger.Warn("PfmController.Index => Redirecting to {0}", absoluteUrl);
+            Logger.Info("Index => Redirecting to {0}", absoluteUrl);
             return Redirect(absoluteUrl.ToString());
         }
     }
