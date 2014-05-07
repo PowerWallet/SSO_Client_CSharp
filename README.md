@@ -176,8 +176,10 @@ Install REST API client:
     string redirectUrl = await _client.NewSession(credentials, Request.UserHostAddress);
     
     
+#### Demo Application     
     
-    
-    
+[http://sso-csharp.apphb.com/](http://sso-csharp.apphb.com/)
+
+
     
     
