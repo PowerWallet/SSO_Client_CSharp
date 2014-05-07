@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNet.Identity;
+﻿using FinApps.SSO.RestClient.Annotations;
+using Microsoft.AspNet.Identity;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
 using Owin;
@@ -8,6 +9,7 @@ namespace FinApps.SSO.MVC5
     public partial class Startup
     {
         // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
+        [UsedImplicitly]
         public void ConfigureAuth(IAppBuilder app)
         {
             // Enable the application to use a cookie to store information for the signed in user

@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
@@ -10,6 +12,7 @@ using FinApps.SSO.RestClient.Model;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
+using NLog;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -18,6 +21,7 @@ namespace FinApps.SSO.MVC5.Controllers
     {
         #region private members and constructors
 
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
         private IConfig _configuration;
         private IFinAppsRestClient _client;
@@ -110,7 +114,10 @@ namespace FinApps.SSO.MVC5.Controllers
         public async Task<ActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid)
+            {
+                LogModelStateErrors();
                 return View(model);
+            }
 
             if (_client == null)
                 _client = InitializeApiClient();
@@ -118,26 +125,44 @@ namespace FinApps.SSO.MVC5.Controllers
 
             ValidateServiceResult(serviceResult);
             if (!ModelState.IsValid)
+            {
+                LogModelStateErrors();
                 return View(model);
+            }
 
             string userToken = serviceResult.GetUserToken();
             if (string.IsNullOrWhiteSpace(userToken))
             {
+                Logger.Warn("AccountController.Register => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
+
+            Logger.Info("AccountController.Register => UserToken[{0}]", userToken);
             
             ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
             IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
             if (identityResult.Succeeded)
             {
                 await SignInAsync(user, isPersistent: false);
+                Logger.Info("AccountController.Register => Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
             AddErrors(identityResult);
 
             // If we got this far, something failed, redisplay form
+            LogModelStateErrors();
             return View(model);
+        }
+
+        private void LogModelStateErrors()
+        {
+            var errorMessage = new StringBuilder();
+            foreach (ModelError error in ModelState.Values.SelectMany(modelState => modelState.Errors))
+            {
+                errorMessage.Append(error.ErrorMessage);
+            }
+            Logger.Info("AccountController.Register => Error: Invalid ModelState. {0}", errorMessage.ToString());
         }
 
         //
