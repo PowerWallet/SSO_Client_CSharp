@@ -1,23 +1,23 @@
-﻿@using FinApps.SSO.MVC5.Models;
-@using Microsoft.AspNet.Identity;
-@{
+﻿@{
     ViewBag.Title = "Manage Account";
 }
 
 <h2>@ViewBag.Title.</h2>
-
-<p class="text-success">@ViewBag.StatusMessage</p>
+@if (!string.IsNullOrWhiteSpace(ViewBag.StatusMessage))
+{
+    <p class="alert alert-success">@ViewBag.StatusMessage</p>
+}
 <div class="row">
     <div class="col-md-12">
-        @if (ViewBag.HasLocalPassword)
-        {
-            @Html.Partial("_ChangePasswordPartial")
-        }
-        else
-        {
-            @Html.Partial("_SetPasswordPartial")
-        }
+        
+        <section id="profile">
+            @Html.Action("UpdateProfile", "Account")
+        </section>
 
+        @(ViewBag.HasLocalPassword
+              ? Html.Partial("_ChangePasswordPartial")
+              : Html.Partial("_SetPasswordPartial"))
+        
         <section id="externalLogins">
             @Html.Action("RemoveAccountList")
             @Html.Partial("_ExternalLoginsListPartial", new {Action = "LinkLogin", ReturnUrl = ViewBag.ReturnUrl})
