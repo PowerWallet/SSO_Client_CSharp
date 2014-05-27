@@ -1,0 +1,12 @@
+﻿@using (Html.BeginForm("Delete", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <h4>Delete Account</h4>
+    <hr />
+    @Html.Hidden("Username", User.Identity.Name)
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Delete Account!" class="btn btn-default btn-danger" />
+        </div>
+    </div>
+}

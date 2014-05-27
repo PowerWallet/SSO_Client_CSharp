@@ -29,5 +29,14 @@ namespace FinApps.SSO.MVC5.Models
                 FinAppsUserToken = applicationUser.FinAppsUserToken
             };
         }
+
+        public static void UpdateFromViewModel(this ApplicationUser applicationUser, UpdateProfileViewModel model)
+        {
+            applicationUser.UserName = model.UserName;
+            applicationUser.Email = model.UserName;
+            applicationUser.PostalCode = model.PostalCode;
+            applicationUser.FirstName = model.FirstName;
+            applicationUser.LastName = model.LastName;            
+        }
     }
 }

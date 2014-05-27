@@ -21,7 +21,7 @@ namespace FinApps.SSO.MVC5.Controllers
     {
         #region private members and constructors
 
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
         private IConfig _configuration;
         private IFinAppsRestClient _client;
@@ -55,7 +55,14 @@ namespace FinApps.SSO.MVC5.Controllers
 
         private void ValidateServiceResult(ServiceResult serviceResult)
         {
-            if (serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess)
+            var successCodes = new[]
+            {
+                ResultCodeTypes.SUCCESSFUL, 
+                ResultCodeTypes.ACCOUNT_AccountSaveSuccess,
+                ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess
+            };
+
+            if (serviceResult != null && successCodes.Contains(serviceResult.Result))
                 return;
 
             var errorMessage = serviceResult != null
@@ -133,19 +140,19 @@ namespace FinApps.SSO.MVC5.Controllers
             string userToken = serviceResult.GetUserToken();
             if (string.IsNullOrWhiteSpace(userToken))
             {
-                Logger.Warn("Register => Error: Invalid UserToken result.");
+                logger.Warn("Register => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
 
-            Logger.Info("Register => UserToken[{0}]", userToken);
-            
+            logger.Info("Register => UserToken[{0}]", userToken);
+
             ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
             IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
             if (identityResult.Succeeded)
             {
                 await SignInAsync(user, isPersistent: false);
-                Logger.Info("Register => Redirecting to {0}", Url.Action("Index", "Home"));
+                logger.Info("Register => Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
             AddErrors(identityResult);
@@ -162,7 +169,7 @@ namespace FinApps.SSO.MVC5.Controllers
             {
                 errorMessage.Append(error.ErrorMessage);
             }
-            Logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
+            logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
         }
 
         //
@@ -181,20 +188,151 @@ namespace FinApps.SSO.MVC5.Controllers
             return RedirectToAction("Manage", new {Message = message});
         }
 
+        [ChildActionOnly]
+        public PartialViewResult UpdateProfile()
+        {
+            ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
+            var model = new UpdateProfileViewModel(user);
+
+            return PartialView("_UpdateProfile", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> UpdateProfile(UpdateProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.StatusMessage = ManageMessageId.Error;
+                return View("UpdateProfile", model);
+            }    
+            
+            ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
+            FinAppsCredentials credentials = user.ToFinAppsCredentials();
+
+            FinAppsUser finAppsUser = model.ToFinAppsUser();
+            
+            if (_client == null)
+                _client = InitializeApiClient();
+
+            // updating profile on remote service
+            ServiceResult serviceResult = await _client.UpdateUserProfile(credentials, finAppsUser);
+            ValidateServiceResult(serviceResult);
+            if (!ModelState.IsValid)
+            {
+                LogModelStateErrors();
+                return View("UpdateProfile", model);
+            }
+
+            string userToken = serviceResult.GetUserToken();
+            if (string.IsNullOrWhiteSpace(userToken))
+            {
+                logger.Warn("Update Profile => Error: Invalid UserToken result.");
+                ModelState.AddModelError("", "Unexpected error. Please try again.");
+                return View("UpdateProfile", model);
+            }
+
+            logger.Info("Update Profile => UserToken[{0}]", userToken);
+            
+            // updating local profile
+            user.FinAppsUserToken = userToken;
+            user.UpdateFromViewModel(model);
+            IdentityResult identityResult = await _userManager.UpdateAsync(user);
+            if (identityResult.Succeeded)
+            {
+                logger.Info("Profile Updated");
+
+                await SignInAsync(user, isPersistent: false);
+
+                return RedirectToAction("Manage", new { Message = ManageMessageId.ProfileUpdatedSuccess });
+            }
+
+            AddErrors(identityResult);
+            return View("UpdateProfile", model);
+        }
+
+        [ChildActionOnly]
+        public PartialViewResult Delete()
+        {
+            return PartialView("_Delete");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Delete(string userName)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Delete");
+            }
+
+            ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
+            if (user.UserName != userName)
+            {
+                logger.Warn("Forbidden user deletion attempted.");
+
+                AuthenticationManager.SignOut();
+                return new HttpUnauthorizedResult();
+            }
+
+            FinAppsCredentials credentials = user.ToFinAppsCredentials();
+
+            if (_client == null)
+                _client = InitializeApiClient();
+
+            // delete account on remote service
+            ServiceResult serviceResult = await _client.DeleteUser(credentials);
+            ValidateServiceResult(serviceResult);
+            if (!ModelState.IsValid)
+            {
+                LogModelStateErrors();
+                return View("Delete");
+            }
+
+            logger.Info("Account deleted from remote service.");
+
+            // delete local account
+            IdentityResult identityResult = await _userManager.DeleteAsync(user);
+            if (!identityResult.Succeeded) 
+                return View("Delete");
+
+            logger.Info("Account Deleted");
+
+            AuthenticationManager.SignOut();
+            return RedirectToAction("Deleted", "Account");
+        }
+
+        [AllowAnonymous]
+        public ActionResult Deleted()
+        {
+            return View();
+        }
+        
         //
         // GET: /Account/Manage
         public ActionResult Manage(ManageMessageId? message)
         {
-            ViewBag.StatusMessage =
-                message == ManageMessageId.ChangePasswordSuccess
-                    ? "Your password has been changed."
-                    : message == ManageMessageId.SetPasswordSuccess
-                        ? "Your password has been set."
-                        : message == ManageMessageId.RemoveLoginSuccess
-                            ? "The external login was removed."
-                            : message == ManageMessageId.Error
-                                ? "An error has occurred."
-                                : "";
+            switch (message)
+            {
+                case ManageMessageId.ProfileUpdatedSuccess:
+                    ViewBag.StatusMessage = "Your profile has been updated";
+                    break;
+                case ManageMessageId.ChangePasswordSuccess:
+                    ViewBag.StatusMessage = "Your password has been changed.";
+                    break;
+                case ManageMessageId.SetPasswordSuccess:
+                    ViewBag.StatusMessage = "Your password has been set.";
+                    break;
+                case ManageMessageId.RemoveLoginSuccess:
+                    ViewBag.StatusMessage = "The external login was removed.";
+                    break;
+                case ManageMessageId.Error:
+                    ModelState.AddModelError("", "An error has occurred.");
+                    break;
+                default:
+                    ViewBag.StatusMessage = string.Empty;
+                    break;
+            }
             ViewBag.HasLocalPassword = HasPassword();
             ViewBag.ReturnUrl = Url.Action("Manage");
             return View();
@@ -211,18 +349,54 @@ namespace FinApps.SSO.MVC5.Controllers
             ViewBag.ReturnUrl = Url.Action("Manage");
             if (hasPassword)
             {
-                if (ModelState.IsValid)
+                if (!ModelState.IsValid) 
+                    return View(model);
+                
+                ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
+                FinAppsCredentials credentials = user.ToFinAppsCredentials();
+                
+                if (_client == null)
+                    _client = InitializeApiClient();
+
+                // updating password on remote service
+                ServiceResult serviceResult = await _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
+                ValidateServiceResult(serviceResult);
+                if (!ModelState.IsValid)
                 {
-                    IdentityResult result =
-                        await
-                            _userManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
-                                model.NewPassword);
-                    if (result.Succeeded)
-                    {
-                        return RedirectToAction("Manage", new {Message = ManageMessageId.ChangePasswordSuccess});
-                    }
-                    AddErrors(result);
+                    LogModelStateErrors();
+                    return View(model);
                 }
+
+                string userToken = serviceResult.GetUserToken();
+                if (string.IsNullOrWhiteSpace(userToken))
+                {
+                    logger.Warn("Manage => Error: Invalid UserToken result.");
+                    ModelState.AddModelError("", "Unexpected error. Please try again.");
+                    return View(model);
+                }
+
+                logger.Info("Manage => UserToken[{0}]", userToken);
+
+
+                // updating usertoken on local profile
+                user.FinAppsUserToken = userToken;
+                IdentityResult identityResult = await _userManager.UpdateAsync(user);
+                if (!identityResult.Succeeded)
+                {
+                    ModelState.AddModelError("", "Unexpected error. Please try again.");
+                    return View(model);
+                }
+
+                logger.Info("Profile Updated => UserToken");
+                
+                // update local password
+                IdentityResult result = await _userManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+                if (result.Succeeded)
+                {
+                    logger.Info("Password Updated.");
+                    return RedirectToAction("Manage", new { Message = ManageMessageId.ChangePasswordSuccess });
+                }
+                AddErrors(result);
             }
             else
             {
@@ -233,16 +407,14 @@ namespace FinApps.SSO.MVC5.Controllers
                     state.Errors.Clear();
                 }
 
-                if (ModelState.IsValid)
+                if (!ModelState.IsValid) 
+                    return View(model);
+                IdentityResult result = await _userManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
+                if (result.Succeeded)
                 {
-                    IdentityResult result =
-                        await _userManager.AddPasswordAsync(User.Identity.GetUserId(), model.NewPassword);
-                    if (result.Succeeded)
-                    {
-                        return RedirectToAction("Manage", new {Message = ManageMessageId.SetPasswordSuccess});
-                    }
-                    AddErrors(result);
+                    return RedirectToAction("Manage", new {Message = ManageMessageId.SetPasswordSuccess});
                 }
+                AddErrors(result);
             }
 
             // If we got this far, something failed, redisplay form
@@ -415,6 +587,7 @@ namespace FinApps.SSO.MVC5.Controllers
 
         public enum ManageMessageId
         {
+            ProfileUpdatedSuccess,
             ChangePasswordSuccess,
             SetPasswordSuccess,
             RemoveLoginSuccess,

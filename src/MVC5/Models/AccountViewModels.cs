@@ -68,6 +68,7 @@ namespace FinApps.SSO.MVC5.Models
         [Required]
         [StringLength(10, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 5)]
         [DataType(DataType.PostalCode)]
+        [Display(Name = "Postal Code")]
         public string PostalCode { get; set; }
 
         [StringLength(50)]
@@ -104,6 +105,57 @@ namespace FinApps.SSO.MVC5.Models
                 Password = model.Password,
                 PostalCode = model.PostalCode
             };
+        }
+    }
+
+    public class UpdateProfileViewModel
+    {
+        public UpdateProfileViewModel(ApplicationUser user)
+        {
+            FirstName = user.FirstName;
+            LastName = user.LastName;
+            UserName = user.UserName;
+            PostalCode = user.PostalCode;
+        }
+
+        public UpdateProfileViewModel()
+        {            
+        }
+
+        [Required]
+        [Display(Name = "Email")]
+        [DataType(DataType.EmailAddress)]
+        [EmailAddress]
+        [StringLength(100)]
+        public string UserName { get; set; }
+
+        [Required]
+        [StringLength(10, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 5)]
+        [DataType(DataType.PostalCode)]
+        [Display(Name = "Postal Code")]
+        public string PostalCode { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+
+        [StringLength(50)]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
+    }
+
+    public static class UpdateProfileViewModelExtensions
+    {
+        public static FinAppsUser ToFinAppsUser(this UpdateProfileViewModel model)
+        {
+            var finAppsUser = new FinAppsUser
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.UserName,
+                PostalCode = model.PostalCode
+            };
+            return finAppsUser;            
         }
     }
 }
