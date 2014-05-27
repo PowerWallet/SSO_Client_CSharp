@@ -248,6 +248,63 @@ namespace FinApps.SSO.MVC5.Controllers
             return View("UpdateProfile", model);
         }
 
+        [ChildActionOnly]
+        public PartialViewResult Delete()
+        {
+            return PartialView("_Delete");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Delete(string userName)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Delete");
+            }
+
+            ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
+            if (user.UserName != userName)
+            {
+                logger.Warn("Forbidden user deletion attempted.");
+
+                AuthenticationManager.SignOut();
+                return new HttpUnauthorizedResult();
+            }
+
+            FinAppsCredentials credentials = user.ToFinAppsCredentials();
+
+            if (_client == null)
+                _client = InitializeApiClient();
+
+            // delete account on remote service
+            ServiceResult serviceResult = await _client.DeleteUser(credentials);
+            ValidateServiceResult(serviceResult);
+            if (!ModelState.IsValid)
+            {
+                LogModelStateErrors();
+                return View("Delete");
+            }
+
+            logger.Info("Account deleted from remote service.");
+
+            // delete local account
+            IdentityResult identityResult = await _userManager.DeleteAsync(user);
+            if (!identityResult.Succeeded) 
+                return View("Delete");
+
+            logger.Info("Account Deleted");
+
+            AuthenticationManager.SignOut();
+            return RedirectToAction("Deleted", "Account");
+        }
+
+        [AllowAnonymous]
+        public ActionResult Deleted()
+        {
+            return View();
+        }
+        
         //
         // GET: /Account/Manage
         public ActionResult Manage(ManageMessageId? message)

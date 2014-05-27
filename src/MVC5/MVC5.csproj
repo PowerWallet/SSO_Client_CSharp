@@ -270,6 +270,9 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Account\_UpdateProfile.cshtml" />
     <Content Include="Views\Account\UpdateProfile.cshtml" />
+    <Content Include="Views\Account\_Delete.cshtml" />
+    <Content Include="Views\Account\Deleted.cshtml" />
+    <Content Include="Views\Account\Delete.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
