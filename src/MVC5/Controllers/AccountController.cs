@@ -241,6 +241,9 @@ namespace FinApps.SSO.MVC5.Controllers
             if (identityResult.Succeeded)
             {
                 logger.Info("Profile Updated");
+
+                await SignInAsync(user, isPersistent: false);
+
                 return RedirectToAction("Manage", new { Message = ManageMessageId.ProfileUpdatedSuccess });
             }
 
