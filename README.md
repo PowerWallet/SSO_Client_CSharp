@@ -149,7 +149,7 @@ Output:
 
 ```
 
-####Update User Password
+####Delete User's Account
 ##### `DELETE /v1/users/delete` 
 ```
 
