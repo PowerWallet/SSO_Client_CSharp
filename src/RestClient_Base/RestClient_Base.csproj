@@ -4,14 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{4126597B-AE7C-4E98-8358-A322B767E810}</ProjectGuid>
+    <ProjectGuid>{0281506F-FE29-473B-B693-305D301F3E2E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FinApps.SSO.RestClient_NET40</RootNamespace>
-    <AssemblyName>FinApps.SSO.RestClient_NET40</AssemblyName>
+    <RootNamespace>FinApps.SSO.RestClient_Base</RootNamespace>
+    <AssemblyName>FinApps.SSO.RestClient_Base</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
   </PropertyGroup>
@@ -33,22 +33,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="RestSharp">
-      <HintPath>..\packages\RestSharp.104.4.0\lib\net4\RestSharp.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="FinAppsRestClient.cs" />
-    <Compile Include="IFinAppsRestClient.cs" />
+    <Compile Include="Enums\ResultCodeTypes.cs" />
+    <Compile Include="Model\FinAppsCredentials.cs" />
+    <Compile Include="Model\FinAppsUser.cs" />
+    <Compile Include="Model\ServiceResultExtensions.cs" />
+    <Compile Include="Response\NewSessionResponse.cs" />
+    <Compile Include="Response\NewUserResponse.cs" />
+    <Compile Include="Model\ServiceResult.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RestClient_Base\RestClient_Base.csproj">
-      <Project>{0281506F-FE29-473B-B693-305D301F3E2E}</Project>
-      <Name>RestClient_Base</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

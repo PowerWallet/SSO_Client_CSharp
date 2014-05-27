@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Enum\ResultCodeTypes.cs" />
     <Compile Include="FinAppsRestClient.cs" />
+    <Compile Include="IFinAppsRestClient.cs" />
     <Compile Include="Model\FinAppsCredentials.cs" />
     <Compile Include="Model\FinAppsUser.cs" />
     <Compile Include="Model\NewSessionResponse.cs" />

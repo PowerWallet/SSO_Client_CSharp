@@ -5,12 +5,12 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading.Tasks;
-using FinApps.SSO.RestClient.Annotations;
-using FinApps.SSO.RestClient.Enum;
-using FinApps.SSO.RestClient.Model;
+using FinApps.SSO.RestClient_Base.Annotations;
+using FinApps.SSO.RestClient_Base.Enums;
+using FinApps.SSO.RestClient_Base.Model;
 using Newtonsoft.Json;
 
-namespace FinApps.SSO.RestClient
+namespace FinApps.SSO.RestClient_NET451
 {
     [UsedImplicitly]
     public class FinAppsRestClient : IFinAppsRestClient
