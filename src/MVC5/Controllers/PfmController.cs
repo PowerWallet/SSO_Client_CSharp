@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
 using FinApps.SSO.MVC5.Services;
-using FinApps.SSO.RestClient;
-using FinApps.SSO.RestClient.Annotations;
+using FinApps.SSO.RestClient_Base.Annotations;
+using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using NLog;
@@ -19,7 +19,7 @@ namespace FinApps.SSO.MVC5.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private IConfig _configuration;
         private IFinAppsRestClient _client;
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UsedImplicitly]
         public PfmController()
@@ -58,7 +58,7 @@ namespace FinApps.SSO.MVC5.Controllers
             ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
             if (!IsValidUser(user))
             {
-                Logger.Error("Index => Error: Not a valid user.");
+                logger.Error("Index => Error: Not a valid user.");
                 return View("Error");
             }
 
@@ -68,18 +68,18 @@ namespace FinApps.SSO.MVC5.Controllers
             string redirectUrl = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
             if (string.IsNullOrEmpty(redirectUrl))
             {
-                Logger.Error("Index => Error: Invalid redirect URL.");
+                logger.Error("Index => Error: Invalid redirect URL.");
                 return View("Error");
             }
             
             Uri absoluteUrl;
             if (!Uri.TryCreate(redirectUrl, UriKind.Absolute, out absoluteUrl))
             {
-                Logger.Error("Index => Error: Invalid redirect URL.");
+                logger.Error("Index => Error: Invalid redirect URL.");
                 return (ActionResult) View("Error");
             }
             
-            Logger.Info("Index => Redirecting to {0}", absoluteUrl);
+            logger.Info("Index => Redirecting to {0}", absoluteUrl);
             return Redirect(absoluteUrl.ToString());
         }
     }

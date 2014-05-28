@@ -45,12 +45,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\RestClient_Base\RestClient_Base.csproj">
-      <Project>{0281506F-FE29-473B-B693-305D301F3E2E}</Project>
-      <Name>RestClient_Base</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

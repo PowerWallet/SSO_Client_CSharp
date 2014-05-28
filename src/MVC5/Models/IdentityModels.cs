@@ -1,4 +1,4 @@
-﻿using FinApps.SSO.RestClient.Model;
+﻿using FinApps.SSO.RestClient_Base.Model;
 using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace FinApps.SSO.MVC5.Models

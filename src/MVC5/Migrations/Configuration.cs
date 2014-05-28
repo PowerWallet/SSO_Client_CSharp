@@ -1,5 +1,5 @@
 using FinApps.SSO.MVC5.Models;
-using FinApps.SSO.RestClient.Annotations;
+using FinApps.SSO.RestClient_Base.Annotations;
 
 namespace FinApps.SSO.MVC5.Migrations
 {

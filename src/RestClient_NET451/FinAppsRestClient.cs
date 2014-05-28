@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Enums;
+using FinApps.SSO.RestClient_Base.Extensions;
 using FinApps.SSO.RestClient_Base.Model;
 using Newtonsoft.Json;
 
@@ -82,12 +83,7 @@ namespace FinApps.SSO.RestClient_NET451
                             break;
                     }
 
-                    if (response == null)
-                    {
-                        return null;
-                    }
-
-                    if (!response.IsSuccessStatusCode)
+                    if (response == null || !response.IsSuccessStatusCode)
                         return UnableToConnectServiceResult(response);
 
                     string result = await response.Content.ReadAsStringAsync();
@@ -95,22 +91,17 @@ namespace FinApps.SSO.RestClient_NET451
                 }
                 catch (WebException ex)
                 {
-                    return ExceptionServiceResult(ex);
+                    return ex.ToServiceResult();
                 }
                 catch (TaskCanceledException ex)
                 {
-                    return ExceptionServiceResult(ex);
+                    return ex.ToServiceResult();
                 }
             }
         }
 
-        private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource)
-        {
-            return await PostAsync(postData, resource, null);
-        }
-
         private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
-            AuthenticationHeaderValue authenticationHeaderValue)
+            AuthenticationHeaderValue authenticationHeaderValue = null)
         {
             return await SendAsync("POST", postData, resource, authenticationHeaderValue);
         }
@@ -127,16 +118,7 @@ namespace FinApps.SSO.RestClient_NET451
             return await SendAsync("DELETE", null, resource, authenticationHeaderValue);
         }
 
-        private static ServiceResult ExceptionServiceResult(Exception ex)
-        {
-            return new ServiceResult
-            {
-                Result = ResultCodeTypes.EXCEPTION_WebServiceException,
-                ResultString = ex.Message
-            };
-        }
-
-        private static ServiceResult UnableToConnectServiceResult(HttpResponseMessage response = null)
+        private static ServiceResult UnableToConnectServiceResult(HttpResponseMessage response)
         {
             var serviceResult = new ServiceResult
             {
@@ -175,14 +157,6 @@ namespace FinApps.SSO.RestClient_NET451
             return httpClient;
         }
 
-        private static AuthenticationHeaderValue BuildAuthenticationHeaderValue(FinAppsCredentials finAppsCredentials)
-        {
-            string parameter = string.Format("{0}:{1}", finAppsCredentials.Email, finAppsCredentials.FinAppsUserToken);
-            string base64Parameter = Convert.ToBase64String(System.Text.Encoding.ASCII.GetBytes(parameter));
-            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", base64Parameter);
-            return authenticationHeaderValue;
-        }
-
         #endregion
 
         public async Task<ServiceResult> NewUser(FinAppsUser finAppsUser)
@@ -199,14 +173,15 @@ namespace FinApps.SSO.RestClient_NET451
             return await PostAsync(postData, "users/New");
         }
 
-        public async Task<string> NewSession(FinAppsCredentials finAppsCredentials, string clientIp)
+        public async Task<string> NewSession(FinAppsCredentials finAppsCredentials, 
+            string clientIp)
         {
             var postData = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("ClientIp", clientIp),
             };
 
-            var authenticationHeaderValue = BuildAuthenticationHeaderValue(finAppsCredentials);
+            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
 
             ServiceResult serviceResult = await PostAsync(postData, "users/Login", authenticationHeaderValue);
             if (serviceResult == null || serviceResult.Result != ResultCodeTypes.SUCCESSFUL)
@@ -226,12 +201,12 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("PostalCode", finAppsUser.PostalCode)
             };
 
-            var authenticationHeaderValue = BuildAuthenticationHeaderValue(finAppsCredentials);
+            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
             return await PutAsync(postData, "users/Update", authenticationHeaderValue);
         }
 
-        public async Task<ServiceResult> UpdateUserPassword(FinAppsCredentials finAppsCredentials, string oldPassword,
-            string newPassword)
+        public async Task<ServiceResult> UpdateUserPassword(FinAppsCredentials finAppsCredentials, 
+            string oldPassword, string newPassword)
         {
             var postData = new List<KeyValuePair<string, string>>
             {
@@ -239,13 +214,13 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("NewPassword", newPassword)
             };
 
-            var authenticationHeaderValue = BuildAuthenticationHeaderValue(finAppsCredentials);
+            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
             return await PutAsync(postData, "users/UpdatePassword", authenticationHeaderValue);
         }
 
         public async Task<ServiceResult> DeleteUser(FinAppsCredentials finAppsCredentials)
         {
-            var authenticationHeaderValue = BuildAuthenticationHeaderValue(finAppsCredentials);
+            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
             return await DeleteAsync("users/Delete", authenticationHeaderValue);
         }
     }
