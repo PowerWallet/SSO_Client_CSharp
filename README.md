@@ -91,6 +91,85 @@ Output:
 
 ```
 
+####Update User Profile
+##### `PUT /v1/users/update` 
+```
+
+Input:
+
+Requires Company Level Authentication
+Requires User Level Authentication
+Body:
+{
+  "firstname" :	User's First Name (optional)
+  "lastname" : User's First Name (optional)
+  "email" : User's Email, must be unique.
+  "postalcode" : User's Postal Code
+}
+
+ 
+Output:
+
+{
+  "Result": 0,
+  "ResultString": "Successful",
+  "ResultObject": {
+      "UserToken": "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+  }
+}
+
+
+```
+
+####Update User Password
+##### `PUT /v1/users/updatepassword` 
+```
+
+Input:
+
+Requires Company Level Authentication
+Requires User Level Authentication
+Body:
+{
+  "oldpassword" : User's old Password
+  "newpassword" : User's new Password, min size 6 chars, must contain UPPER and lowercase letters and a number
+}
+
+ 
+Output:
+
+{
+  "Result": 0,
+  "ResultString": "Successful",
+  "ResultObject": {
+      "UserToken": "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+  }
+}
+
+
+```
+
+####Delete User's Account
+##### `DELETE /v1/users/delete` 
+```
+
+Input:
+
+Requires Company Level Authentication
+Requires User Level Authentication
+
+ 
+Output:
+
+{
+  "Result": 0,
+  "ResultString": "Successful",
+  "ResultObject": {}
+}
+
+
+```
+
 
 FinApps API - C# API Client
 ===========================
@@ -127,6 +206,9 @@ Install REST API client:
     Install-Package FinApps.ApiClient
 
 ### Sample Usage
+
+#### .Net 4.5.1
+===============
 
 #### Create a user:
 
