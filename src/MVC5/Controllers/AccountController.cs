@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
-using FinApps.SSO.MVC5.Services;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Enums;
 using FinApps.SSO.RestClient_Base.Model;
@@ -13,6 +12,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using NLog;
+using Quintsys.EnviromentConfigurationManager;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -23,7 +23,7 @@ namespace FinApps.SSO.MVC5.Controllers
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
-        private IConfig _configuration;
+        private IEnviromentConfigManager _configuration;
         private IFinAppsRestClient _client;
 
         [UsedImplicitly]
@@ -34,7 +34,7 @@ namespace FinApps.SSO.MVC5.Controllers
         {
         }
 
-        public AccountController(UserManager<ApplicationUser> userManager, IConfig config,
+        public AccountController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
@@ -45,7 +45,7 @@ namespace FinApps.SSO.MVC5.Controllers
         private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
-                _configuration = new Config();
+                _configuration = new EnviromentConfigManager();
 
             return new FinAppsRestClient(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
@@ -72,10 +72,18 @@ namespace FinApps.SSO.MVC5.Controllers
             ModelState.AddModelError("", errorMessage);
         }
 
+        private void LogModelStateErrors()
+        {
+            var errorMessage = new StringBuilder();
+            foreach (ModelError error in ModelState.Values.SelectMany(modelState => modelState.Errors))
+            {
+                errorMessage.Append(error.ErrorMessage);
+            }
+            logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
+        }
+
         #endregion
 
-        //
-        // GET: /Account/Login
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
@@ -83,8 +91,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
 
-        //
-        // POST: /Account/Login
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -105,16 +111,12 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // GET: /Account/Register
         [AllowAnonymous]
         public ActionResult Register()
         {
             return View();
         }
 
-        //
-        // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -152,7 +154,7 @@ namespace FinApps.SSO.MVC5.Controllers
             if (identityResult.Succeeded)
             {
                 await SignInAsync(user, isPersistent: false);
-                logger.Info("Register => Redirecting to {0}", Url.Action("Index", "Home"));
+                logger.Info("Register => Success. Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
             AddErrors(identityResult);
@@ -162,18 +164,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        private void LogModelStateErrors()
-        {
-            var errorMessage = new StringBuilder();
-            foreach (ModelError error in ModelState.Values.SelectMany(modelState => modelState.Errors))
-            {
-                errorMessage.Append(error.ErrorMessage);
-            }
-            logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
-        }
-
-        //
-        // POST: /Account/Disassociate
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Disassociate(string loginProvider, string providerKey)
@@ -308,8 +298,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
         
-        //
-        // GET: /Account/Manage
         public ActionResult Manage(ManageMessageId? message)
         {
             switch (message)
@@ -338,8 +326,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
 
-        //
-        // POST: /Account/Manage
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Manage(ManageUserViewModel model)
@@ -421,8 +407,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // POST: /Account/ExternalLogin
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -433,8 +417,6 @@ namespace FinApps.SSO.MVC5.Controllers
                 Url.Action("ExternalLoginCallback", "Account", new {ReturnUrl = returnUrl}));
         }
 
-        //
-        // GET: /Account/ExternalLoginCallback
         [AllowAnonymous]
         public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
         {
@@ -458,8 +440,6 @@ namespace FinApps.SSO.MVC5.Controllers
                 new ExternalLoginConfirmationViewModel {UserName = loginInfo.DefaultUserName});
         }
 
-        //
-        // POST: /Account/LinkLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LinkLogin(string provider)
@@ -468,8 +448,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return new ChallengeResult(provider, Url.Action("LinkLoginCallback", "Account"), User.Identity.GetUserId());
         }
 
-        //
-        // GET: /Account/LinkLoginCallback
         public async Task<ActionResult> LinkLoginCallback()
         {
             var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync(XsrfKey, User.Identity.GetUserId());
@@ -485,8 +463,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return RedirectToAction("Manage", new {Message = ManageMessageId.Error});
         }
 
-        //
-        // POST: /Account/ExternalLoginConfirmation
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -524,8 +500,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // POST: /Account/LogOff
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
@@ -534,8 +508,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //
-        // GET: /Account/ExternalLoginFailure
         [AllowAnonymous]
         public ActionResult ExternalLoginFailure()
         {

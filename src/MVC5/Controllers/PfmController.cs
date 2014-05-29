@@ -2,12 +2,12 @@
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
-using FinApps.SSO.MVC5.Services;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using NLog;
+using Quintsys.EnviromentConfigurationManager;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -17,7 +17,7 @@ namespace FinApps.SSO.MVC5.Controllers
         #region private members and constructors
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private IConfig _configuration;
+        private IEnviromentConfigManager _configuration;
         private IFinAppsRestClient _client;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -27,7 +27,7 @@ namespace FinApps.SSO.MVC5.Controllers
         {
         }
 
-        public PfmController(UserManager<ApplicationUser> userManager, IConfig config,
+        public PfmController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
@@ -38,7 +38,7 @@ namespace FinApps.SSO.MVC5.Controllers
         private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
-                _configuration = new Config();
+                _configuration = new EnviromentConfigManager();
 
             return new FinAppsRestClient(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
