@@ -4,22 +4,22 @@ using FinApps.SSO.RestClient_Base.Model;
 
 namespace FinApps.SSO.RestClient_NET451
 {
-    public interface IFinAppsRestClient
+    public interface IFinAppsRestClient<T>
     {
         [UsedImplicitly]
-        Task<ServiceResult> NewUser(FinAppsUser finAppsUser);
+        Task<T> NewUser(FinAppsUser finAppsUser);
 
         [UsedImplicitly]
         Task<string> NewSession(FinAppsCredentials finAppsCredentials, string clientIp);
 
         [UsedImplicitly]
-        Task<ServiceResult> UpdateUserProfile(FinAppsCredentials finAppsCredentials, FinAppsUser finAppsUser);
+        Task<T> UpdateUserProfile(FinAppsCredentials finAppsCredentials, FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        Task<ServiceResult> UpdateUserPassword(FinAppsCredentials finAppsCredentials, string oldPassword,
+        Task<T> UpdateUserPassword(FinAppsCredentials finAppsCredentials, string oldPassword,
             string newPassword);
 
         [UsedImplicitly]
-        Task<ServiceResult> DeleteUser(FinAppsCredentials finAppsCredentials);
+        Task<T> DeleteUser(FinAppsCredentials finAppsCredentials);
     }
 }

@@ -14,22 +14,18 @@ using Newtonsoft.Json;
 namespace FinApps.SSO.RestClient_NET451
 {
     [UsedImplicitly]
-    public class FinAppsRestClient : IFinAppsRestClient
+    public class FinAppsRestClient<T> : IFinAppsRestClient<T> where T : new()
     {
         #region private members and constructor
 
         private const string ApiVersion = "1";
+        private readonly string _finAppsToken;
+        private readonly string _baseUrl;        
 
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
         {
-            BaseUrl = baseUrl;
-            CompanyIdentifier = companyIdentifier;
-            CompanyToken = companyToken;
-        }
-
-        private string FinAppsToken
-        {
-            get { return string.Format("{0}:{1}", CompanyIdentifier, CompanyToken); }
+            _baseUrl = baseUrl;
+            _finAppsToken = string.Format("{0}:{1}", companyIdentifier, companyToken);
         }
 
         private static string UserAgent
@@ -43,18 +39,11 @@ namespace FinApps.SSO.RestClient_NET451
             {
                 Assembly assembly = Assembly.GetExecutingAssembly();
                 var assemblyName = new AssemblyName(assembly.FullName);
-                Version version = assemblyName.Version;
-                return version;
+                return assemblyName.Version;
             }
         }
-
-        private string CompanyIdentifier { get; set; }
-
-        private string CompanyToken { get; set; }
-
-        private string BaseUrl { get; set; }
-
-        private async Task<ServiceResult> SendAsync(string requestType,
+        
+        private async Task<T> SendAsync(string requestType,
             IEnumerable<KeyValuePair<string, string>> postData,
             string resource,
             AuthenticationHeaderValue authenticationHeaderValue)
@@ -67,16 +56,10 @@ namespace FinApps.SSO.RestClient_NET451
                     switch (requestType)
                     {
                         case "POST":
-                            response =
-                                await
-                                    httpClient.PostAsync(requestUri: resource,
-                                        content: new FormUrlEncodedContent(postData));
+                            response = await httpClient.PostAsync(requestUri: resource, content: new FormUrlEncodedContent(postData));
                             break;
                         case "PUT":
-                            response =
-                                await
-                                    httpClient.PutAsync(requestUri: resource,
-                                        content: new FormUrlEncodedContent(postData));
+                            response = await httpClient.PutAsync(requestUri: resource, content: new FormUrlEncodedContent(postData));
                             break;
                         case "DELETE":
                             response = await httpClient.DeleteAsync(requestUri: resource);
@@ -84,35 +67,39 @@ namespace FinApps.SSO.RestClient_NET451
                     }
 
                     if (response == null || !response.IsSuccessStatusCode)
-                        return UnableToConnectServiceResult(response);
+                    {
+                        throw new Exception();
+                    }
+                    //return UnableToConnectServiceResult(response);
 
                     string result = await response.Content.ReadAsStringAsync();
-                    return JsonConvert.DeserializeObject<ServiceResult>(result);
+                    return JsonConvert.DeserializeObject<T>(result);
                 }
                 catch (WebException ex)
                 {
-                    return ex.ToServiceResult();
+                    Errors.Add(string.Empty, ex.Message);
                 }
                 catch (TaskCanceledException ex)
                 {
-                    return ex.ToServiceResult();
+                    Errors.Add(string.Empty, ex.Message);
                 }
             }
+            return new T();
         }
 
-        private async Task<ServiceResult> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
+        private async Task<T> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
             AuthenticationHeaderValue authenticationHeaderValue = null)
         {
             return await SendAsync("POST", postData, resource, authenticationHeaderValue);
         }
 
-        private async Task<ServiceResult> PutAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
+        private async Task<T> PutAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
             AuthenticationHeaderValue authenticationHeaderValue)
         {
             return await SendAsync("PUT", postData, resource, authenticationHeaderValue);
         }
 
-        private async Task<ServiceResult> DeleteAsync(string resource,
+        private async Task<T> DeleteAsync(string resource,
             AuthenticationHeaderValue authenticationHeaderValue)
         {
             return await SendAsync("DELETE", null, resource, authenticationHeaderValue);
@@ -134,7 +121,7 @@ namespace FinApps.SSO.RestClient_NET451
         {
             var httpClient = new HttpClient
             {
-                BaseAddress = new Uri(string.Format("{0}v{1}/", BaseUrl, ApiVersion))
+                BaseAddress = new Uri(string.Format("{0}v{1}/", _baseUrl, ApiVersion))
             };
             httpClient.DefaultRequestHeaders.Accept.Clear();
             httpClient.Timeout = TimeSpan.FromSeconds(60.0);
@@ -142,7 +129,7 @@ namespace FinApps.SSO.RestClient_NET451
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-charset", "utf-8");
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UserAgent);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", FinAppsToken);
+            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", _finAppsToken);
 
             return httpClient;
         }
@@ -159,7 +146,7 @@ namespace FinApps.SSO.RestClient_NET451
 
         #endregion
 
-        public async Task<ServiceResult> NewUser(FinAppsUser finAppsUser)
+        public async Task<T> NewUser(FinAppsUser finAppsUser)
         {
             var postData = new List<KeyValuePair<string, string>>
             {
@@ -183,14 +170,16 @@ namespace FinApps.SSO.RestClient_NET451
 
             var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
 
-            ServiceResult serviceResult = await PostAsync(postData, "users/Login", authenticationHeaderValue);
-            if (serviceResult == null || serviceResult.Result != ResultCodeTypes.SUCCESSFUL)
+            T serviceResult = await PostAsync(postData, "users/Login", authenticationHeaderValue);
+            //if (serviceResult == null || serviceResult.Result != ResultCodeTypes.SUCCESSFUL)
+            var result = serviceResult as ServiceResult;
+            if (result == null || result.Result != ResultCodeTypes.SUCCESSFUL)
                 return null;
 
-            return serviceResult.GetRedirectUrl();
+            return result.GetRedirectUrl();
         }
 
-        public async Task<ServiceResult> UpdateUserProfile(FinAppsCredentials finAppsCredentials,
+        public async Task<T> UpdateUserProfile(FinAppsCredentials finAppsCredentials,
             FinAppsUser finAppsUser)
         {
             var postData = new List<KeyValuePair<string, string>>
@@ -205,7 +194,7 @@ namespace FinApps.SSO.RestClient_NET451
             return await PutAsync(postData, "users/Update", authenticationHeaderValue);
         }
 
-        public async Task<ServiceResult> UpdateUserPassword(FinAppsCredentials finAppsCredentials, 
+        public async Task<T> UpdateUserPassword(FinAppsCredentials finAppsCredentials, 
             string oldPassword, string newPassword)
         {
             var postData = new List<KeyValuePair<string, string>>
@@ -218,10 +207,12 @@ namespace FinApps.SSO.RestClient_NET451
             return await PutAsync(postData, "users/UpdatePassword", authenticationHeaderValue);
         }
 
-        public async Task<ServiceResult> DeleteUser(FinAppsCredentials finAppsCredentials)
+        public async Task<T> DeleteUser(FinAppsCredentials finAppsCredentials)
         {
             var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
             return await DeleteAsync("users/Delete", authenticationHeaderValue);
         }
+
+        public Dictionary<string, string> Errors { get; private set; }  
     }
 }

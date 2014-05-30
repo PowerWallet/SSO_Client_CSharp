@@ -6,18 +6,18 @@ namespace FinApps.SSO.RestClient_NET40
     public interface IFinAppsRestClient
     {
         [UsedImplicitly]
-        ServiceResult NewUser(FinAppsUser finAppsUser);
+        FinAppsUser NewUser(FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        ServiceResult NewSession(FinAppsCredentials finAppsCredentials, string clientIp);
+        ServiceResult NewSession(FinAppsCredentials credentials, string clientIp);
 
         [UsedImplicitly]
-        ServiceResult UpdateUserProfile(FinAppsCredentials finAppsCredentials, FinAppsUser finAppsUser);
+        ServiceResult UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        ServiceResult UpdateUserPassword(FinAppsCredentials finAppsCredentials, string oldPassword, string newPassword);
+        ServiceResult UpdateUserPassword(FinAppsCredentials credentials, string oldPassword, string newPassword);
 
         [UsedImplicitly]
-        ServiceResult DeleteUser(FinAppsCredentials finAppsCredentials);
+        ServiceResult DeleteUser(FinAppsCredentials credentials);
     }
 }

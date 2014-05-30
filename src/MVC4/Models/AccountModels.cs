@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Web.Mvc;
+using FinApps.SSO.RestClient_Base.Model;
 
 namespace FinApps.SSO.MVC4.Models
 {
@@ -29,6 +30,19 @@ namespace FinApps.SSO.MVC4.Models
         public string LastName { get; set; }
         public string PostalCode { get; set; }
         public string FinAppsUserToken { get; set; }
+
+    }
+
+    public static class UserProfileExtensions
+    {
+        public static FinAppsCredentials ToFinAppsCredentials(this UserProfile user)
+        {
+            return new FinAppsCredentials
+            {
+                Email = user.Email,
+                FinAppsUserToken = user.FinAppsUserToken
+            };
+        }
     }
 
     public class RegisterExternalLoginModel

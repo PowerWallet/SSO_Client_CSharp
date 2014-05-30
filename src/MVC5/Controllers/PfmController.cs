@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Web.Mvc;
+using System.Web.Services.Description;
 using FinApps.SSO.MVC5.Models;
 using FinApps.SSO.RestClient_Base.Annotations;
+using FinApps.SSO.RestClient_Base.Model;
 using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
@@ -18,7 +20,7 @@ namespace FinApps.SSO.MVC5.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
         private IEnviromentConfigManager _configuration;
-        private IFinAppsRestClient _client;
+        private IFinAppsRestClient<ServiceResult> _client;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UsedImplicitly]
@@ -28,19 +30,19 @@ namespace FinApps.SSO.MVC5.Controllers
         }
 
         public PfmController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
-            IFinAppsRestClient finAppsRestClient)
+            IFinAppsRestClient<ServiceResult> finAppsRestClient)
         {
             _userManager = userManager;
             _configuration = config;
             _client = finAppsRestClient;
         }
 
-        private FinAppsRestClient InitializeApiClient()
+        private FinAppsRestClient<ServiceResult> InitializeApiClient()
         {
             if (_configuration == null)
                 _configuration = new EnviromentConfigManager();
 
-            return new FinAppsRestClient(
+            return new FinAppsRestClient<ServiceResult>(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));

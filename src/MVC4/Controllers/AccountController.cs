@@ -123,15 +123,16 @@ namespace FinApps.SSO.MVC4.Controllers
                 return View(model);
             }
 
-            ServiceResult serviceResult = _client.NewUser(model.ToFinAppsUser());
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            FinAppsUser user = _client.NewUser(model.ToFinAppsUser());
+            if (user.Errors != null && user.Errors.Any())
             {
-                LogModelStateErrors();
+                foreach (var error in user.Errors)
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+
                 return View(model);
             }
 
-            string userToken = serviceResult.GetUserToken();
+            string userToken = user.UserToken;
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 logger.Warn("Register => Error: Invalid UserToken result.");
@@ -388,6 +389,58 @@ namespace FinApps.SSO.MVC4.Controllers
             return PartialView("_RemoveExternalLoginsPartial", externalLogins);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(string email)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("Delete");
+            }
+
+            var currentUserName = User.Identity.Name;
+            if (email != currentUserName)
+            {
+                logger.Warn("Forbidden user deletion attempted.");
+
+                WebSecurity.Logout();
+                return new HttpUnauthorizedResult();
+            }
+
+            var context = new UsersContext();
+            UserProfile user = context.UserProfiles.FirstOrDefault(u => u.Email == email);
+            if (user == null)
+            {
+                logger.Warn("No valid user found for email: {0}!", email);
+
+                WebSecurity.Logout();
+                return new HttpUnauthorizedResult();
+            }
+
+            if (!string.IsNullOrWhiteSpace(user.FinAppsUserToken))
+            {
+                FinAppsCredentials credentials = user.ToFinAppsCredentials();
+
+                // delete account on remote service
+                ServiceResult serviceResult = _client.DeleteUser(credentials);
+                ValidateServiceResult(serviceResult);
+                if (!ModelState.IsValid)
+                {
+                    LogModelStateErrors();
+                    return View("Delete");
+                }
+                
+                logger.Info("Account deleted from remote service.");
+            }
+
+            // delete local account
+            Membership.DeleteUser(email, true);
+            logger.Info("Local account deleted.");
+
+            WebSecurity.Logout();
+            return RedirectToAction("Deleted", "Account");
+        }
+
         #region Helpers
 
         private ActionResult RedirectToLocal(string returnUrl)
@@ -467,5 +520,11 @@ namespace FinApps.SSO.MVC4.Controllers
         }
 
         #endregion
+
+        [AllowAnonymous]
+        public ActionResult Deleted()
+        {
+            return View();
+        }
     }
 }

@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using FinApps.SSO.RestClient_Base;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Model;
@@ -11,144 +10,101 @@ namespace FinApps.SSO.RestClient_NET40
     [UsedImplicitly]
     public class FinAppsRestClient : IFinAppsRestClient
     {
+        private readonly GenericRestClient<ServiceResult> _genericRestClient;
+
         #region private members and constructor
 
         private const string ApiVersion = "1";
+        private readonly string _baseUrl;
 
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
         {
-            BaseUrl = baseUrl;
             CompanyIdentifier = companyIdentifier;
             CompanyToken = companyToken;
-        }
+            _baseUrl = string.Format("{0}v{1}/", baseUrl, ApiVersion);
 
-        private string FinAppsToken
-        {
-            get { return string.Format("{0}:{1}", CompanyIdentifier, CompanyToken); }
+            _genericRestClient = new GenericRestClient<ServiceResult>(_baseUrl);
         }
 
         private static string UserAgent
         {
-            get { return string.Format("finapps-csharp/{0} (.NET {1})", AssemblyVersion, Environment.Version); }
+            get { return string.Format("finapps-csharp/{0} (.NET {1})", ExecutingAssembly.AssemblyVersion, Environment.Version); }
         }
 
-        private static Version AssemblyVersion
+        private static string CompanyIdentifier { get; set; }
+
+        private static string CompanyToken { get; set; }
+
+        private static RestRequest CreateRestRequest(Method method, string resource)
         {
-            get
+            var request = new RestRequest(method)
             {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                var assemblyName = new AssemblyName(assembly.FullName);
-                Version version = assemblyName.Version;
-                return version;
-            }
-        }
-
-        private string CompanyIdentifier { get; set; }
-
-        private string CompanyToken { get; set; }
-
-        private string BaseUrl { get; set; }
-
-        private T Execute<T>(IRestRequest request) where T : new()
-        {
-            return Execute<T>(request, null);
-        }
-
-        private T Execute<T>(IRestRequest request, FinAppsCredentials credentials) where T : new()
-        {
-            var client = new RestClient(baseUrl: string.Format("{0}v{1}/", BaseUrl, ApiVersion));
-            if (credentials != null)
-                client.Authenticator = new HttpBasicAuthenticator(credentials.Email, credentials.FinAppsUserToken);
-
-            request.Timeout = TimeSpan.FromSeconds(60.0).Milliseconds;
+                Resource = resource,
+                Timeout = TimeSpan.FromSeconds(60.0).Milliseconds
+            };
+            
             request.AddHeader("Accept", "application/json");
             request.AddHeader("Accept-Encoding", "gzip, deflate");
             request.AddHeader("Accept-charset", "utf-8");
             request.AddHeader("User-Agent", UserAgent);
-            request.AddHeader("X-FinApps-Token", FinAppsToken);
+            request.AddHeader("X-FinApps-Token", string.Format("{0}:{1}", CompanyIdentifier, CompanyToken));
 
-            var response = client.Execute<T>(request);
-            if (response.ErrorException == null)
-                return response.Data;
-
-            var exception = new ApplicationException("Error retrieving response.  Check inner details for more info.", response.ErrorException);
-            throw exception;
+            return request;
         }
 
         #endregion
 
-        public ServiceResult NewUser(FinAppsUser finAppsUser)
+        public FinAppsUser NewUser(FinAppsUser finAppsUser)
         {
             Require.Argument("Email", finAppsUser.Email);
             Require.Argument("Password", finAppsUser.Password);
             Require.Argument("PostalCode", finAppsUser.PostalCode);
 
-            var request = new RestRequest(Method.POST)
-            {
-                Resource = Resources.NewUser
-            };
-
+            RestRequest request = CreateRestRequest(Method.POST, Resources.NewUser);
             request.AddParameter("Email", finAppsUser.Email);
             request.AddParameter("Password", finAppsUser.Password);
             request.AddParameter("PostalCode", finAppsUser.PostalCode);
-
-            if (string.IsNullOrWhiteSpace(finAppsUser.FirstName)) 
+            if (!string.IsNullOrWhiteSpace(finAppsUser.FirstName)) 
                 request.AddParameter("FirstName", finAppsUser.FirstName);
-            if (string.IsNullOrWhiteSpace(finAppsUser.LastName)) 
+            if (!string.IsNullOrWhiteSpace(finAppsUser.LastName)) 
                 request.AddParameter("LastName", finAppsUser.LastName);
 
-            return Execute<ServiceResult>(request);
+            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
+            return genericRestClient.Execute(request);
         }
 
-        public ServiceResult NewSession(FinAppsCredentials finAppsCredentials, string clientIp)
+        public ServiceResult NewSession(FinAppsCredentials credentials, string clientIp)
         {
-            var request = new RestRequest(Method.POST)
-            {
-                Resource = Resources.NewSession
-            };
-
+            RestRequest request = CreateRestRequest(Method.POST, Resources.NewSession);        
             if (string.IsNullOrWhiteSpace(clientIp))
                 request.AddParameter("ClientIp", clientIp);
 
-
-            return Execute<ServiceResult>(request, finAppsCredentials);
+            return _genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
-        public ServiceResult UpdateUserProfile(FinAppsCredentials finAppsCredentials, FinAppsUser finAppsUser)
+        public ServiceResult UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser)
         {
-            var request = new RestRequest(Method.PUT)
-            {
-                Resource = Resources.UpdateUserProfile
-            };
-
-            return Execute<ServiceResult>(request, finAppsCredentials);
+            RestRequest request = CreateRestRequest(Method.PUT, Resources.UpdateUserProfile);
+            return _genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
-        public ServiceResult UpdateUserPassword(FinAppsCredentials finAppsCredentials, string oldPassword,
+        public ServiceResult UpdateUserPassword(FinAppsCredentials credentials, string oldPassword,
             string newPassword)
         {
             Require.Argument("OldPassword", oldPassword);
             Require.Argument("NewPassword", newPassword);
-            
-            var request = new RestRequest(Method.PUT)
-            {
-                Resource = Resources.UpdateUserPassword
-            };
 
+            RestRequest request = CreateRestRequest(Method.PUT, Resources.UpdateUserPassword);
             request.AddParameter("OldPassword", oldPassword);
             request.AddParameter("NewPassword", newPassword);
 
-            return Execute<ServiceResult>(request, finAppsCredentials);
+            return _genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
-        public ServiceResult DeleteUser(FinAppsCredentials finAppsCredentials)
+        public ServiceResult DeleteUser(FinAppsCredentials credentials)
         {
-            var request = new RestRequest(Method.DELETE)
-            {
-                Resource = Resources.DeleteUser
-            };
-
-            return Execute<ServiceResult>(request, finAppsCredentials);
+            RestRequest request = CreateRestRequest(Method.DELETE, Resources.DeleteUser);
+            return _genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
     }
 }

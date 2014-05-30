@@ -15,6 +15,9 @@ namespace FinApps.SSO.RestClient_Base.Model
 
         public static string GetUserToken(this ServiceResult serviceResult)
         {
+            if (serviceResult.ResultObject == null) 
+                return null;
+
             var newUserResponse = JsonConvert.DeserializeObject<NewUserResponse>(serviceResult.ResultObject.ToString());
             return newUserResponse != null
                 ? newUserResponse.UserToken

@@ -348,6 +348,9 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Web.config" />
+    <Content Include="Views\Account\Delete.cshtml" />
+    <Content Include="Views\Account\_Delete.cshtml" />
+    <Content Include="Views\Account\Deleted.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

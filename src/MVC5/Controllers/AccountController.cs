@@ -24,7 +24,7 @@ namespace FinApps.SSO.MVC5.Controllers
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
         private IEnviromentConfigManager _configuration;
-        private IFinAppsRestClient _client;
+        private IFinAppsRestClient<ServiceResult> _client;
 
         [UsedImplicitly]
         public AccountController()
@@ -35,19 +35,19 @@ namespace FinApps.SSO.MVC5.Controllers
         }
 
         public AccountController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
-            IFinAppsRestClient finAppsRestClient)
+            IFinAppsRestClient<ServiceResult> finAppsRestClient)
         {
             _userManager = userManager;
             _configuration = config;
             _client = finAppsRestClient;
         }
 
-        private FinAppsRestClient InitializeApiClient()
+        private FinAppsRestClient<ServiceResult> InitializeApiClient()
         {
             if (_configuration == null)
                 _configuration = new EnviromentConfigManager();
 
-            return new FinAppsRestClient(
+            return new FinAppsRestClient<ServiceResult>(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
@@ -265,28 +265,31 @@ namespace FinApps.SSO.MVC5.Controllers
                 return new HttpUnauthorizedResult();
             }
 
-            FinAppsCredentials credentials = user.ToFinAppsCredentials();
-
-            if (_client == null)
-                _client = InitializeApiClient();
-
-            // delete account on remote service
-            ServiceResult serviceResult = await _client.DeleteUser(credentials);
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            if (!string.IsNullOrWhiteSpace(user.FinAppsUserToken))
             {
-                LogModelStateErrors();
-                return View("Delete");
-            }
+                FinAppsCredentials credentials = user.ToFinAppsCredentials();
 
-            logger.Info("Account deleted from remote service.");
+                if (_client == null)
+                    _client = InitializeApiClient();
+
+                // delete account on remote service
+                ServiceResult serviceResult = await _client.DeleteUser(credentials);
+                ValidateServiceResult(serviceResult);
+                if (!ModelState.IsValid)
+                {
+                    LogModelStateErrors();
+                    return View("Delete");
+                }
+
+                logger.Info("Account deleted from remote service.");
+            }
 
             // delete local account
             IdentityResult identityResult = await _userManager.DeleteAsync(user);
             if (!identityResult.Succeeded) 
                 return View("Delete");
 
-            logger.Info("Account Deleted");
+            logger.Info("Local account deleted.");
 
             AuthenticationManager.SignOut();
             return RedirectToAction("Deleted", "Account");
