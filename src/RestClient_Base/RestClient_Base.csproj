@@ -49,7 +49,6 @@
     <Compile Include="Model\FinAppsError.cs" />
     <Compile Include="Model\FinAppsUser.cs" />
     <Compile Include="Model\ServiceResultExtensions.cs" />
-    <Compile Include="Model\ValueProviderResult.cs" />
     <Compile Include="Resources.cs" />
     <Compile Include="Response\NewSessionResponse.cs" />
     <Compile Include="Response\NewUserResponse.cs" />
