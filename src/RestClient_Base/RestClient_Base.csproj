@@ -46,12 +46,8 @@
     <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Model\FinAppsBase.cs" />
     <Compile Include="Model\FinAppsCredentials.cs" />
+    <Compile Include="Model\FinAppsError.cs" />
     <Compile Include="Model\FinAppsUser.cs" />
-    <Compile Include="Model\ApiModelError.cs" />
-    <Compile Include="Model\ModelErrorCollection.cs" />
-    <Compile Include="Model\ApiModelState.cs" />
-    <Compile Include="Model\ApiModelStateDictionary.cs" />
-    <Compile Include="Model\RestException.cs" />
     <Compile Include="Model\ServiceResultExtensions.cs" />
     <Compile Include="Model\ValueProviderResult.cs" />
     <Compile Include="Resources.cs" />
