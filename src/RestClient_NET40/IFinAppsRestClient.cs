@@ -9,15 +9,15 @@ namespace FinApps.SSO.RestClient_NET40
         FinAppsUser NewUser(FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        ServiceResult NewSession(FinAppsCredentials credentials, string clientIp);
+        FinAppsUser NewSession(FinAppsCredentials credentials, string clientIp);
 
         [UsedImplicitly]
-        ServiceResult UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser);
+        FinAppsUser UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser);
 
         [UsedImplicitly]
-        ServiceResult UpdateUserPassword(FinAppsCredentials credentials, string oldPassword, string newPassword);
+        FinAppsUser UpdateUserPassword(FinAppsCredentials credentials, string oldPassword, string newPassword);
 
         [UsedImplicitly]
-        ServiceResult DeleteUser(FinAppsCredentials credentials);
+        FinAppsUser DeleteUser(FinAppsCredentials credentials);
     }
 }

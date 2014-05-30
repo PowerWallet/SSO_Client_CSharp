@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using FinApps.SSO.RestClient_Base.Annotations;
 
 namespace FinApps.SSO.RestClient_Base.Model
@@ -17,5 +17,9 @@ namespace FinApps.SSO.RestClient_Base.Model
         public string PostalCode { get; set; }
 
         public string UserToken { get; set; }
+
+        public Guid? SessionToken { get; set; }
+
+        public string SessionRedirectUrl { get; set; }
     }
 }

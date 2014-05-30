@@ -40,7 +40,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExecutingAssembly.cs" />
     <Compile Include="FinAppsRestClient.cs" />
     <Compile Include="GenericRestClient.cs" />
     <Compile Include="IFinAppsRestClient.cs" />

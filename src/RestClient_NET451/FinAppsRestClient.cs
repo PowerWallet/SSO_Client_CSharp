@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Reflection;
 using System.Threading.Tasks;
+using FinApps.SSO.RestClient_Base;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Enums;
-using FinApps.SSO.RestClient_Base.Extensions;
 using FinApps.SSO.RestClient_Base.Model;
 using Newtonsoft.Json;
 
@@ -30,17 +29,7 @@ namespace FinApps.SSO.RestClient_NET451
 
         private static string UserAgent
         {
-            get { return string.Format("finapps-csharp/{0} (.NET {1})", AssemblyVersion, Environment.Version); }
-        }
-
-        private static Version AssemblyVersion
-        {
-            get
-            {
-                Assembly assembly = Assembly.GetExecutingAssembly();
-                var assemblyName = new AssemblyName(assembly.FullName);
-                return assemblyName.Version;
-            }
+            get { return string.Format("finapps-csharp/{0} (.NET {1})", ExecutingAssembly.AssemblyVersion, Environment.Version); }
         }
         
         private async Task<T> SendAsync(string requestType,
@@ -103,18 +92,6 @@ namespace FinApps.SSO.RestClient_NET451
             AuthenticationHeaderValue authenticationHeaderValue)
         {
             return await SendAsync("DELETE", null, resource, authenticationHeaderValue);
-        }
-
-        private static ServiceResult UnableToConnectServiceResult(HttpResponseMessage response)
-        {
-            var serviceResult = new ServiceResult
-            {
-                Result = ResultCodeTypes.EXCEPTION_UnableToConnect,
-                ResultString = response == null
-                    ? string.Format("Invalid request.")
-                    : string.Format("Unable to connect. Status code of the HTTP response: {0}.", response.StatusCode)
-            };
-            return serviceResult;
         }
 
         private HttpClient InitializeHttpClient()

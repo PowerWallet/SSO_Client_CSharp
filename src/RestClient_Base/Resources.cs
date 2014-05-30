@@ -1,6 +1,6 @@
 ﻿namespace FinApps.SSO.RestClient_Base
 {
-    public class Resources
+    public static class Resources
     {
         public const string NewUser = "users/new";
         public const string NewSession = "users/login";

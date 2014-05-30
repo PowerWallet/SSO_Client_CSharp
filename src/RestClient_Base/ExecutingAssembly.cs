@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
 
-namespace FinApps.SSO.RestClient_NET40
+namespace FinApps.SSO.RestClient_Base
 {
     public static class ExecutingAssembly
     {

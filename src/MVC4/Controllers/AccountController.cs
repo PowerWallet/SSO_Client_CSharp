@@ -9,7 +9,6 @@ using DotNetOpenAuth.AspNet;
 using FinApps.SSO.MVC4.Filters;
 using FinApps.SSO.MVC4.Models;
 using FinApps.SSO.RestClient_Base.Annotations;
-using FinApps.SSO.RestClient_Base.Enums;
 using FinApps.SSO.RestClient_Base.Model;
 using FinApps.SSO.RestClient_NET40;
 using Microsoft.Web.WebPages.OAuth;
@@ -28,7 +27,6 @@ namespace FinApps.SSO.MVC4.Controllers
         private readonly IFinAppsRestClient _client;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-
         public AccountController(IFinAppsRestClient client)
         {
             _client = client;
@@ -42,25 +40,6 @@ namespace FinApps.SSO.MVC4.Controllers
                 baseUrl: configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: configuration.Get("FinAppsCompanyToken"));
-        }
-
-        private void ValidateServiceResult(ServiceResult serviceResult)
-        {
-            var successCodes = new[]
-            {
-                ResultCodeTypes.SUCCESSFUL, 
-                ResultCodeTypes.ACCOUNT_AccountSaveSuccess,
-                ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess
-            };
-
-            if (serviceResult != null && successCodes.Contains(serviceResult.Result))
-                return;
-
-            var errorMessage = serviceResult != null
-                ? serviceResult.ResultString // => extended error information available on serviceResult.ResultObject
-                : "Unexpected error. Please try again.";
-
-            ModelState.AddModelError("", errorMessage);
         }
 
         private void LogModelStateErrors()
@@ -148,7 +127,8 @@ namespace FinApps.SSO.MVC4.Controllers
                 {
                     model.FirstName,
                     model.LastName,
-                    model.PostalCode
+                    model.PostalCode,
+                    FinAppsUserToken = userToken
                 };
                 WebSecurity.CreateUserAndAccount(model.Email, model.Password, propertyValues);
                 WebSecurity.Login(model.Email, model.Password);
@@ -228,12 +208,48 @@ namespace FinApps.SSO.MVC4.Controllers
                 if (!ModelState.IsValid)
                     return View(model);
 
+                var context = new UsersContext();
+                UserProfile user = context.UserProfiles.FirstOrDefault(u => u.Email == User.Identity.Name);
+                if (user == null)
+                {
+                    logger.Warn("No valid user found for email: {0}!", User.Identity.Name);
+
+                    WebSecurity.Logout();
+                    return new HttpUnauthorizedResult();
+                }
+                FinAppsCredentials credentials = user.ToFinAppsCredentials();
+                
+                // updating password on remote service
+                FinAppsUser finAppsUser = _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
+                if (finAppsUser.Errors != null)
+                {
+                    foreach (var error in finAppsUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
+                    logger.Error("Manage => Error: Model validation errors.");
+                    return View(model);
+                }
+
+                if (string.IsNullOrEmpty(finAppsUser.UserToken))
+                {
+                    logger.Error("Manage => Error: Invalid user token.");
+                    ModelState.AddModelError("", "Unexpected error. Please try again.");
+                    return View(model);
+                }
+                logger.Info("Manage => UserToken[{0}]", finAppsUser.UserToken);
+
+                // updating usertoken on local profile
+                user.FinAppsUserToken = finAppsUser.UserToken;
+                context.SaveChanges();
+                logger.Info("Manage => Profile Updated : UserToken");
+
+                
                 // ChangePassword will throw an exception rather than return false in certain failure scenarios.
                 bool changePasswordSucceeded;
                 try
                 {
-                    changePasswordSucceeded = WebSecurity.ChangePassword(User.Identity.Name, model.OldPassword,
-                        model.NewPassword);
+                    changePasswordSucceeded = WebSecurity.ChangePassword(User.Identity.Name, model.OldPassword, model.NewPassword);
                 }
                 catch (Exception)
                 {
@@ -422,12 +438,15 @@ namespace FinApps.SSO.MVC4.Controllers
                 FinAppsCredentials credentials = user.ToFinAppsCredentials();
 
                 // delete account on remote service
-                ServiceResult serviceResult = _client.DeleteUser(credentials);
-                ValidateServiceResult(serviceResult);
-                if (!ModelState.IsValid)
+                FinAppsUser finAppsUser = _client.DeleteUser(credentials);
+                if (finAppsUser.Errors != null && finAppsUser.Errors.Any())
                 {
+                    foreach (var error in finAppsUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
                     LogModelStateErrors();
-                    return View("Delete");
+                    return View();
                 }
                 
                 logger.Info("Account deleted from remote service.");
