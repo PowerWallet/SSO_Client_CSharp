@@ -6,6 +6,7 @@ namespace FinApps.SSO.RestClient_Base.Model
     [UsedImplicitly]
     public class FinAppsUser : FinAppsBase
     {
+        // ReSharper disable UnusedAutoPropertyAccessor.Global
         public string FirstName { get; set; }
 
         public string LastName { get; set; }
@@ -18,6 +19,7 @@ namespace FinApps.SSO.RestClient_Base.Model
 
         public string UserToken { get; set; }
 
+        // ReSharper disable once UnusedMember.Global
         public Guid? SessionToken { get; set; }
 
         public string SessionRedirectUrl { get; set; }

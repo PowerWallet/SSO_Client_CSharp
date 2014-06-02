@@ -10,8 +10,10 @@ namespace FinApps.SSO.RestClient_Base.Model
         public string FinAppsUserToken { get; set; }
     }
 
+    [UsedImplicitly]
     public static class FinAppsCredentialsExtensions
     {
+        // ReSharper disable once UnusedMember.Global
         public static string To64BaseEncodedCredentials(this FinAppsCredentials credentials)
         {
             string parameter = string.Format("{0}:{1}", credentials.Email, credentials.FinAppsUserToken);

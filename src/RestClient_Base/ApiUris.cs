@@ -1,7 +1,11 @@
-﻿namespace FinApps.SSO.RestClient_Base
+﻿using FinApps.SSO.RestClient_Base.Annotations;
+
+namespace FinApps.SSO.RestClient_Base
 {
-    public static class Resources
+    [UsedImplicitly]
+    public static class ApiUris
     {
+        // ReSharper disable UnusedMember.Global
         public const string NewUser = "users/new";
         public const string NewSession = "users/login";
         public const string UpdateUserProfile = "users/update";

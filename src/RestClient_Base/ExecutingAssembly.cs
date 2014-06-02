@@ -1,10 +1,13 @@
 using System;
 using System.Reflection;
+using FinApps.SSO.RestClient_Base.Annotations;
 
 namespace FinApps.SSO.RestClient_Base
 {
+    [UsedImplicitly]
     public static class ExecutingAssembly
     {
+        // ReSharper disable UnusedMember.Global
         public static Version AssemblyVersion
         {
             get

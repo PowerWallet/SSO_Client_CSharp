@@ -33,26 +33,16 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enums\ResultCodeTypes.cs" />
     <Compile Include="ExecutingAssembly.cs" />
-    <Compile Include="Extensions\ExceptionExtensions.cs" />
     <Compile Include="Model\FinAppsBase.cs" />
     <Compile Include="Model\FinAppsCredentials.cs" />
     <Compile Include="Model\FinAppsError.cs" />
     <Compile Include="Model\FinAppsUser.cs" />
-    <Compile Include="Model\ServiceResultExtensions.cs" />
-    <Compile Include="Resources.cs" />
-    <Compile Include="Response\NewSessionResponse.cs" />
-    <Compile Include="Response\NewUserResponse.cs" />
-    <Compile Include="Model\ServiceResult.cs" />
+    <Compile Include="ApiUris.cs" />
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
