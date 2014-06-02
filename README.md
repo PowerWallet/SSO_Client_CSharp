@@ -1,7 +1,7 @@
 FinApps API - Single Sign On
 ============================
 
-[REST API]
+[REST API] for Single Sign On
 
 [REST API]:https://github.com/PowerWallet/SSO_Client_CSharp/blob/master/API.md
 
