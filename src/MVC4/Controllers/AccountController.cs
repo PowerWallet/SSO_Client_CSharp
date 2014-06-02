@@ -138,6 +138,7 @@ namespace FinApps.SSO.MVC4.Controllers
             }
             catch (MembershipCreateUserException e)
             {
+                logger.Info("Register => Error", e.Message);
                 ModelState.AddModelError("", ErrorCodeToString(e.StatusCode));
             }
 
