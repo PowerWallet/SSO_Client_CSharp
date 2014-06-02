@@ -39,6 +39,8 @@ To install a FinApp library using the Package Manager console, first open the co
 Install REST API client:
 
     Install-Package FinApps.ApiClient
+    
+
 
 ### Sample Usage
 
