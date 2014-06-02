@@ -53,9 +53,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="FinApps.SSO.RestClient, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\FinApps.ApiClient.1.0.1\lib\Net451\FinApps.SSO.RestClient.dll</HintPath>
+    <Reference Include="FinApps.SSO.RestClient_Base">
+      <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
+    </Reference>
+    <Reference Include="FinApps.SSO.RestClient_NET451">
+      <HintPath>..\packages\FinApps.ApiClient.1.0.3\lib\Net451\FinApps.SSO.RestClient_NET451.dll</HintPath>
     </Reference>
     <Reference Include="LogentriesCore">
       <HintPath>..\packages\logentries.core.2.4.4\lib\net40\LogentriesCore.dll</HintPath>
@@ -121,6 +123,9 @@
     </Reference>
     <Reference Include="NLog">
       <HintPath>..\packages\NLog.2.1.0\lib\net45\NLog.dll</HintPath>
+    </Reference>
+    <Reference Include="Quintsys.EnviromentConfigurationManager">
+      <HintPath>..\packages\Quintsys.EnviromentConfigurationManager.1.0.1\lib\Quintsys.EnviromentConfigurationManager.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -206,7 +211,6 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\Config.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>

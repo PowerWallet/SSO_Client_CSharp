@@ -4,15 +4,14 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
-using FinApps.SSO.MVC5.Services;
-using FinApps.SSO.RestClient;
-using FinApps.SSO.RestClient.Annotations;
-using FinApps.SSO.RestClient.Enum;
-using FinApps.SSO.RestClient.Model;
+using FinApps.SSO.RestClient_Base.Annotations;
+using FinApps.SSO.RestClient_Base.Model;
+using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
 using NLog;
+using Quintsys.EnviromentConfigurationManager;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -23,7 +22,7 @@ namespace FinApps.SSO.MVC5.Controllers
 
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
-        private IConfig _configuration;
+        private IEnviromentConfigManager _configuration;
         private IFinAppsRestClient _client;
 
         [UsedImplicitly]
@@ -34,7 +33,7 @@ namespace FinApps.SSO.MVC5.Controllers
         {
         }
 
-        public AccountController(UserManager<ApplicationUser> userManager, IConfig config,
+        public AccountController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
@@ -45,37 +44,26 @@ namespace FinApps.SSO.MVC5.Controllers
         private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
-                _configuration = new Config();
+                _configuration = new EnviromentConfigManager();
 
             return new FinAppsRestClient(
-                baseUrl: _configuration.Get("FinAppsDemoUrl"),
+                baseUrl: _configuration.Get("FinAppsUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
         }
 
-        private void ValidateServiceResult(ServiceResult serviceResult)
+        private void LogModelStateErrors()
         {
-            var successCodes = new[]
+            var errorMessage = new StringBuilder();
+            foreach (ModelError error in ModelState.Values.SelectMany(modelState => modelState.Errors))
             {
-                ResultCodeTypes.SUCCESSFUL, 
-                ResultCodeTypes.ACCOUNT_AccountSaveSuccess,
-                ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess
-            };
-
-            if (serviceResult != null && successCodes.Contains(serviceResult.Result))
-                return;
-
-            var errorMessage = serviceResult != null
-                ? serviceResult.ResultString // => extended error information available on serviceResult.ResultObject
-                : "Unexpected error. Please try again.";
-
-            ModelState.AddModelError("", errorMessage);
+                errorMessage.Append(error.ErrorMessage);
+            }
+            logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
         }
 
         #endregion
 
-        //
-        // GET: /Account/Login
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
@@ -83,8 +71,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
 
-        //
-        // POST: /Account/Login
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -105,16 +91,12 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // GET: /Account/Register
         [AllowAnonymous]
         public ActionResult Register()
         {
             return View();
         }
 
-        //
-        // POST: /Account/Register
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -128,31 +110,31 @@ namespace FinApps.SSO.MVC5.Controllers
 
             if (_client == null)
                 _client = InitializeApiClient();
-            ServiceResult serviceResult = await _client.NewUser(model.ToFinAppsUser());
-
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            FinAppsUser user = await _client.NewUser(model.ToFinAppsUser());
+            if (user.Errors != null && user.Errors.Any())
             {
-                LogModelStateErrors();
+                foreach (var error in user.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                }
                 return View(model);
             }
 
-            string userToken = serviceResult.GetUserToken();
+            string userToken = user.UserToken;
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 logger.Warn("Register => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
-
             logger.Info("Register => UserToken[{0}]", userToken);
 
-            ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
-            IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
+            ApplicationUser applicationUser = model.ToApplicationUser(finAppsUserToken: userToken);
+            IdentityResult identityResult = await _userManager.CreateAsync(applicationUser, model.Password);
             if (identityResult.Succeeded)
             {
-                await SignInAsync(user, isPersistent: false);
-                logger.Info("Register => Redirecting to {0}", Url.Action("Index", "Home"));
+                await SignInAsync(applicationUser, isPersistent: false);
+                logger.Info("Register => Success. Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
             AddErrors(identityResult);
@@ -162,18 +144,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        private void LogModelStateErrors()
-        {
-            var errorMessage = new StringBuilder();
-            foreach (ModelError error in ModelState.Values.SelectMany(modelState => modelState.Errors))
-            {
-                errorMessage.Append(error.ErrorMessage);
-            }
-            logger.Info("LogModelStateErrors => Error: Invalid ModelState. {0}", errorMessage.ToString());
-        }
-
-        //
-        // POST: /Account/Disassociate
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Disassociate(string loginProvider, string providerKey)
@@ -216,23 +186,25 @@ namespace FinApps.SSO.MVC5.Controllers
                 _client = InitializeApiClient();
 
             // updating profile on remote service
-            ServiceResult serviceResult = await _client.UpdateUserProfile(credentials, finAppsUser);
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            FinAppsUser updatedUser = await _client.UpdateUserProfile(credentials, finAppsUser);
+            if (updatedUser.Errors != null && updatedUser.Errors.Any())
             {
-                LogModelStateErrors();
+                foreach (var error in updatedUser.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                }
                 return View("UpdateProfile", model);
             }
 
-            string userToken = serviceResult.GetUserToken();
+            string userToken = updatedUser.UserToken;
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 logger.Warn("Update Profile => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
-                return View("UpdateProfile", model);
+                return View(model);
             }
-
             logger.Info("Update Profile => UserToken[{0}]", userToken);
+
             
             // updating local profile
             user.FinAppsUserToken = userToken;
@@ -275,28 +247,34 @@ namespace FinApps.SSO.MVC5.Controllers
                 return new HttpUnauthorizedResult();
             }
 
-            FinAppsCredentials credentials = user.ToFinAppsCredentials();
-
-            if (_client == null)
-                _client = InitializeApiClient();
-
-            // delete account on remote service
-            ServiceResult serviceResult = await _client.DeleteUser(credentials);
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            if (!string.IsNullOrWhiteSpace(user.FinAppsUserToken))
             {
-                LogModelStateErrors();
-                return View("Delete");
-            }
+                FinAppsCredentials credentials = user.ToFinAppsCredentials();
 
-            logger.Info("Account deleted from remote service.");
+                if (_client == null)
+                    _client = InitializeApiClient();
+
+                // delete account on remote service
+                FinAppsUser deletedUser = await _client.DeleteUser(credentials);
+                if (deletedUser.Errors != null && deletedUser.Errors.Any())
+                {
+                    foreach (var error in deletedUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
+                    LogModelStateErrors();
+                    return View("Delete");
+                }
+
+                logger.Info("Account deleted from remote service.");
+            }
 
             // delete local account
             IdentityResult identityResult = await _userManager.DeleteAsync(user);
             if (!identityResult.Succeeded) 
                 return View("Delete");
 
-            logger.Info("Account Deleted");
+            logger.Info("Local account deleted.");
 
             AuthenticationManager.SignOut();
             return RedirectToAction("Deleted", "Account");
@@ -308,8 +286,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
         
-        //
-        // GET: /Account/Manage
         public ActionResult Manage(ManageMessageId? message)
         {
             switch (message)
@@ -338,8 +314,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View();
         }
 
-        //
-        // POST: /Account/Manage
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Manage(ManageUserViewModel model)
@@ -359,22 +333,25 @@ namespace FinApps.SSO.MVC5.Controllers
                     _client = InitializeApiClient();
 
                 // updating password on remote service
-                ServiceResult serviceResult = await _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
-                ValidateServiceResult(serviceResult);
-                if (!ModelState.IsValid)
+                FinAppsUser updatedUser = await _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
+                if (updatedUser.Errors != null)
                 {
-                    LogModelStateErrors();
+                    foreach (var error in updatedUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
+                    logger.Error("Manage => Error: Model validation errors.");
                     return View(model);
                 }
 
-                string userToken = serviceResult.GetUserToken();
+
+                string userToken = updatedUser.UserToken;
                 if (string.IsNullOrWhiteSpace(userToken))
                 {
                     logger.Warn("Manage => Error: Invalid UserToken result.");
                     ModelState.AddModelError("", "Unexpected error. Please try again.");
                     return View(model);
                 }
-
                 logger.Info("Manage => UserToken[{0}]", userToken);
 
 
@@ -386,8 +363,7 @@ namespace FinApps.SSO.MVC5.Controllers
                     ModelState.AddModelError("", "Unexpected error. Please try again.");
                     return View(model);
                 }
-
-                logger.Info("Profile Updated => UserToken");
+                logger.Info("Manage => Profile Updated : UserToken");
                 
                 // update local password
                 IdentityResult result = await _userManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
@@ -421,8 +397,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // POST: /Account/ExternalLogin
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -433,8 +407,6 @@ namespace FinApps.SSO.MVC5.Controllers
                 Url.Action("ExternalLoginCallback", "Account", new {ReturnUrl = returnUrl}));
         }
 
-        //
-        // GET: /Account/ExternalLoginCallback
         [AllowAnonymous]
         public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
         {
@@ -458,8 +430,6 @@ namespace FinApps.SSO.MVC5.Controllers
                 new ExternalLoginConfirmationViewModel {UserName = loginInfo.DefaultUserName});
         }
 
-        //
-        // POST: /Account/LinkLogin
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LinkLogin(string provider)
@@ -468,8 +438,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return new ChallengeResult(provider, Url.Action("LinkLoginCallback", "Account"), User.Identity.GetUserId());
         }
 
-        //
-        // GET: /Account/LinkLoginCallback
         public async Task<ActionResult> LinkLoginCallback()
         {
             var loginInfo = await AuthenticationManager.GetExternalLoginInfoAsync(XsrfKey, User.Identity.GetUserId());
@@ -485,8 +453,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return RedirectToAction("Manage", new {Message = ManageMessageId.Error});
         }
 
-        //
-        // POST: /Account/ExternalLoginConfirmation
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -524,8 +490,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return View(model);
         }
 
-        //
-        // POST: /Account/LogOff
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
@@ -534,8 +498,6 @@ namespace FinApps.SSO.MVC5.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //
-        // GET: /Account/ExternalLoginFailure
         [AllowAnonymous]
         public ActionResult ExternalLoginFailure()
         {

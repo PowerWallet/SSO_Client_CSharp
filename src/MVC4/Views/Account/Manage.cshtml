@@ -1,0 +1,24 @@
+﻿@model FinApps.SSO.MVC4.Models.LocalPasswordModel
+@{
+    ViewBag.Title = "Manage Account";
+}
+
+<hgroup class="title">
+    <h1>@ViewBag.Title.</h1>
+</hgroup>
+
+<p class="message-success">@ViewBag.StatusMessage</p>
+
+<p>You're logged in as <strong>@User.Identity.Name</strong>.</p>
+
+@(ViewBag.HasLocalPassword
+      ? Html.Partial("_ChangePasswordPartial")
+      : Html.Partial("_SetPasswordPartial"))
+
+<section id="delete">
+    @Html.Partial("_Delete")
+</section>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
