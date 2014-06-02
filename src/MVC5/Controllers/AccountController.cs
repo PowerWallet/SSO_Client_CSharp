@@ -5,7 +5,6 @@ using System.Web;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
 using FinApps.SSO.RestClient_Base.Annotations;
-using FinApps.SSO.RestClient_Base.Enums;
 using FinApps.SSO.RestClient_Base.Model;
 using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
@@ -51,25 +50,6 @@ namespace FinApps.SSO.MVC5.Controllers
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
-        }
-
-        private void ValidateServiceResult(ServiceResult serviceResult)
-        {
-            var successCodes = new[]
-            {
-                ResultCodeTypes.SUCCESSFUL, 
-                ResultCodeTypes.ACCOUNT_AccountSaveSuccess,
-                ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess
-            };
-
-            if (serviceResult != null && successCodes.Contains(serviceResult.Result))
-                return;
-
-            var errorMessage = serviceResult != null
-                ? serviceResult.ResultString // => extended error information available on serviceResult.ResultObject
-                : "Unexpected error. Please try again.";
-
-            ModelState.AddModelError("", errorMessage);
         }
 
         private void LogModelStateErrors()
