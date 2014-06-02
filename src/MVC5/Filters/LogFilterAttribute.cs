@@ -7,7 +7,7 @@ namespace FinApps.SSO.MVC5.Filters
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = true, AllowMultiple = true)]
     public class LogAttribute : ActionFilterAttribute
     {
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
@@ -15,7 +15,7 @@ namespace FinApps.SSO.MVC5.Filters
             string currentAction = rd.GetRequiredString("action");
             string currentController = rd.GetRequiredString("controller");
 
-            Logger.Debug("{0}.{1} => Executing", currentController, currentAction);
+            logger.Debug("{0}.{1} => Executing", currentController, currentAction);
         }
 
         public override void OnActionExecuted(ActionExecutedContext filterContext)
@@ -24,7 +24,7 @@ namespace FinApps.SSO.MVC5.Filters
             string currentAction = rd.GetRequiredString("action");
             string currentController = rd.GetRequiredString("controller");
 
-            Logger.Debug("{0}.{1} => Executed", currentController, currentAction);
+            logger.Debug("{0}.{1} => Executed", currentController, currentAction);
         }
     }
 }
