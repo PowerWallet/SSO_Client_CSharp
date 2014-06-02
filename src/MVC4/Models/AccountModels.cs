@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Web.Mvc;
+using FinApps.SSO.MVC4.Migrations;
 using FinApps.SSO.RestClient_Base.Model;
 
 namespace FinApps.SSO.MVC4.Models
@@ -14,6 +15,11 @@ namespace FinApps.SSO.MVC4.Models
         }
 
         public DbSet<UserProfile> UserProfiles { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<UsersContext, Configuration>());
+        }
     }
 
     [Table("UserProfile")]
@@ -30,7 +36,6 @@ namespace FinApps.SSO.MVC4.Models
         public string LastName { get; set; }
         public string PostalCode { get; set; }
         public string FinAppsUserToken { get; set; }
-
     }
 
     public static class UserProfileExtensions

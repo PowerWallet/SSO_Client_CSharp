@@ -2,14 +2,15 @@ namespace FinApps.SSO.MVC4.Migrations
 {
     using System.Data.Entity.Migrations;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<FinApps.SSO.MVC4.Models.UsersContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<Models.UsersContext>
     {
         public Configuration()
         {
-            AutomaticMigrationsEnabled = false;
+            AutomaticMigrationsEnabled = true;
+            AutomaticMigrationDataLossAllowed = true;
         }
 
-        protected override void Seed(FinApps.SSO.MVC4.Models.UsersContext context)
+        protected override void Seed(Models.UsersContext context)
         {
             //  This method will be called after migrating to the latest version.
 
