@@ -54,11 +54,13 @@ Body:
 Output:
 
 {
-  "Result": 0,
-  "ResultString": "Successful",
-  "ResultObject": {
-      "UserToken": "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
-  }
+    UserToken: "iCQyjFI9SPxF1N17t4EvNXT67AuFnmY7OZqa5k2ucgk="
+    SessionToken: null
+    SessionRedirectUrl: null
+    Email: "test@example.com"
+    FirstName: null
+    LastName: null
+    PostalCode: "12345"
 }
 
 
@@ -84,13 +86,14 @@ Body:
 Output:
 
 {
-  "Result": 0,
-  "ResultString": "Successful",
-  "ResultObject": {
-      "UserToken": "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
-  }
+    UserToken: "iCQyjFI9SPxF1N17t4EvNXT67AuFnmY7OZqa5k2ucgk="
+    SessionToken: null
+    SessionRedirectUrl: null
+    Email: "test@example.com"
+    FirstName: null
+    LastName: null
+    PostalCode: "10016"
 }
-
 
 ```
 
@@ -112,11 +115,13 @@ Body:
 Output:
 
 {
-  "Result": 0,
-  "ResultString": "Successful",
-  "ResultObject": {
-      "UserToken": "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
-  }
+    UserToken: "vCHR/lpl4Uo2by1W54K8t0ucndm0Zni7XYgdRSuSvAI="
+    SessionToken: null
+    SessionRedirectUrl: null
+    Email: "test@example.com"
+    FirstName: null
+    LastName: null
+    PostalCode: "10016"
 }
 
 
@@ -135,9 +140,13 @@ Requires User Level Authentication
 Output:
 
 {
-  "Result": 0,
-  "ResultString": "Successful",
-  "ResultObject": {}
+    UserToken: null
+    SessionToken: null
+    SessionRedirectUrl: null
+    Email: null
+    FirstName: null
+    LastName: null
+    PostalCode: null
 }
 
 
@@ -159,12 +168,13 @@ Body:
 Output:
 
 {
-  "Result": 0,
-  "ResultString": "Successful",
-  "ResultObject": {
-      "RedirectToUrl": "https://www.finapps.com/app/session/new/df9078f4-fe7d-4cbc-a5fa-b595e399ab23",
-      "SessionToken": "df9078f4-fe7d-4cbc-a5fa-b595e399ab23"
-  }
+    UserToken: "REDACTED"
+    SessionToken: "a5a550ec-0c37-46c4-bdf6-976283759c9f"
+    SessionRedirectUrl: https://www.finapps.com/app/session/new/a5a550ec-0c37-46c4-bdf6-976283759c9f
+    Email: "test@example.com"
+    FirstName: null
+    LastName: null
+    PostalCode: "10016"
 }
 
 
