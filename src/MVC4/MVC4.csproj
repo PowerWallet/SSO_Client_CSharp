@@ -76,6 +76,12 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>..\packages\EntityFramework.6.1.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="FinApps.SSO.RestClient_Base">
+      <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
+    </Reference>
+    <Reference Include="FinApps.SSO.RestClient_NET40">
+      <HintPath>..\packages\FinApps.ApiClient.1.0.3\lib\net40\FinApps.SSO.RestClient_NET40.dll</HintPath>
+    </Reference>
     <Reference Include="LogentriesCore">
       <HintPath>..\packages\logentries.core.2.4.4\lib\net40\LogentriesCore.dll</HintPath>
     </Reference>
@@ -103,6 +109,9 @@
     </Reference>
     <Reference Include="Quintsys.EnviromentConfigurationManager">
       <HintPath>..\packages\Quintsys.EnviromentConfigurationManager.1.0.1\lib\Quintsys.EnviromentConfigurationManager.dll</HintPath>
+    </Reference>
+    <Reference Include="RestSharp">
+      <HintPath>..\packages\RestSharp.104.4.0\lib\net4\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -358,16 +367,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RestClient_Base\RestClient_Base.csproj">
-      <Project>{0281506f-fe29-473b-b693-305d301f3e2e}</Project>
-      <Name>RestClient_Base</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RestClient_NET40\RestClient_NET40.csproj">
-      <Project>{4126597b-ae7c-4e98-8358-a322b767e810}</Project>
-      <Name>RestClient_NET40</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201405282001367_Initial.resx">

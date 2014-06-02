@@ -53,6 +53,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\EntityFramework.6.1.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
+    <Reference Include="FinApps.SSO.RestClient_Base">
+      <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
+    </Reference>
+    <Reference Include="FinApps.SSO.RestClient_NET451">
+      <HintPath>..\packages\FinApps.ApiClient.1.0.3\lib\Net451\FinApps.SSO.RestClient_NET451.dll</HintPath>
+    </Reference>
     <Reference Include="LogentriesCore">
       <HintPath>..\packages\logentries.core.2.4.4\lib\net40\LogentriesCore.dll</HintPath>
     </Reference>
@@ -286,16 +292,6 @@
     <EmbeddedResource Include="Migrations\201405051757297_Initial.resx">
       <DependentUpon>201405051757297_Initial.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RestClient_Base\RestClient_Base.csproj">
-      <Project>{0281506F-FE29-473B-B693-305D301F3E2E}</Project>
-      <Name>RestClient_Base</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\RestClient_NET451\RestClient_NET451.csproj">
-      <Project>{c035edda-c033-4681-bd3a-5ff8790c02be}</Project>
-      <Name>RestClient_NET451</Name>
-    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

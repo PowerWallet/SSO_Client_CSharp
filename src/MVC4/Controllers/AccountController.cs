@@ -37,7 +37,7 @@ namespace FinApps.SSO.MVC4.Controllers
         {
             IEnviromentConfigManager configuration = new EnviromentConfigManager();
             _client = new FinAppsRestClient(
-                baseUrl: configuration.Get("FinAppsDemoUrl"),
+                baseUrl: configuration.Get("FinAppsUrl"),
                 companyIdentifier: configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: configuration.Get("FinAppsCompanyToken"));
         }
