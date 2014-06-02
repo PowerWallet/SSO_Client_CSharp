@@ -42,7 +42,7 @@ namespace FinApps.SSO.MVC4
                     }
 
                     logger.Info("Initialize Database Connection");
-                    WebSecurity.InitializeDatabaseConnection("DefaultConnection", "UserProfile", "UserId", "UserName", autoCreateTables: true);
+                    WebSecurity.InitializeDatabaseConnection("DefaultConnection", "UserProfile", "UserId", "Email", autoCreateTables: true);
                 }
                 catch (Exception ex)
                 {
