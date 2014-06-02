@@ -42,10 +42,9 @@ namespace FinApps.SSO.RestClient_NET451
 
         private static void SetAuthenticationHeaderValue(FinAppsCredentials credentials)
         {
-            if (credentials == null)
-                AuthenticationHeaderValue = null;
-
-            AuthenticationHeaderValue = new AuthenticationHeaderValue("Basic", credentials.To64BaseEncodedCredentials());
+            AuthenticationHeaderValue = credentials != null
+                ? new AuthenticationHeaderValue("Basic", credentials.To64BaseEncodedCredentials())
+                : null;
         }
 
         /// <summary>
