@@ -170,7 +170,7 @@ namespace FinApps.SSO.RestClient_NET451
             };
 
             SetAuthenticationHeaderValue(null);
-            return await Send<FinAppsUser>("POST", "users/New", postData);
+            return await Send<FinAppsUser>("POST", ApiUris.NewUser, postData);
         }
 
         /// <summary>
@@ -188,7 +188,7 @@ namespace FinApps.SSO.RestClient_NET451
             };
 
             SetAuthenticationHeaderValue(finAppsCredentials);
-            return await Send<FinAppsUser>("POST", "users/New", postData);
+            return await Send<FinAppsUser>("POST", ApiUris.NewSession, postData);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace FinApps.SSO.RestClient_NET451
             };
 
             SetAuthenticationHeaderValue(finAppsCredentials);
-            return await Send<FinAppsUser>("PUT", "users/Update", postData);
+            return await Send<FinAppsUser>("PUT", ApiUris.UpdateUserProfile, postData);
         }
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace FinApps.SSO.RestClient_NET451
             };
 
             SetAuthenticationHeaderValue(finAppsCredentials);
-            return await Send<FinAppsUser>("PUT", "users/UpdatePassword", postData);
+            return await Send<FinAppsUser>("PUT", ApiUris.UpdateUserPassword, postData);
         }
 
         /// <summary>
@@ -242,7 +242,7 @@ namespace FinApps.SSO.RestClient_NET451
         public async Task<FinAppsUser> DeleteUser(FinAppsCredentials finAppsCredentials)
         {
             SetAuthenticationHeaderValue(finAppsCredentials);
-            return await Send<FinAppsUser>("DELETE", "users/Delete");
+            return await Send<FinAppsUser>("DELETE", ApiUris.DeleteUser);
         }
     }
 }
