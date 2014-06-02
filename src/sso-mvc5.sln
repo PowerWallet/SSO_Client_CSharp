@@ -12,10 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{20FCF7
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MVC5", "MVC5\MVC5.csproj", "{1C9D96CD-8E22-4CAB-BA5C-4B6B489E8DDD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestClient_Base", "RestClient_Base\RestClient_Base.csproj", "{0281506F-FE29-473B-B693-305D301F3E2E}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestClient_NET451", "RestClient_NET451\RestClient_NET451.csproj", "{C035EDDA-C033-4681-BD3A-5FF8790C02BE}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,14 +22,6 @@ Global
 		{1C9D96CD-8E22-4CAB-BA5C-4B6B489E8DDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C9D96CD-8E22-4CAB-BA5C-4B6B489E8DDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C9D96CD-8E22-4CAB-BA5C-4B6B489E8DDD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0281506F-FE29-473B-B693-305D301F3E2E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0281506F-FE29-473B-B693-305D301F3E2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0281506F-FE29-473B-B693-305D301F3E2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0281506F-FE29-473B-B693-305D301F3E2E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C035EDDA-C033-4681-BD3A-5FF8790C02BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C035EDDA-C033-4681-BD3A-5FF8790C02BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C035EDDA-C033-4681-BD3A-5FF8790C02BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C035EDDA-C033-4681-BD3A-5FF8790C02BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
