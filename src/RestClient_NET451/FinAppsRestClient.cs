@@ -105,13 +105,14 @@ namespace FinApps.SSO.RestClient_NET451
             IEnumerable<KeyValuePair<string, string>> postData = null,
             CancellationTokenSource cancellationTokenSource = null)
         {
+            var urlEncodedContent = postData != null
+                ? new FormUrlEncodedContent(postData)
+                : null;
+            CancellationToken cancellationToken = cancellationTokenSource != null
+                ? cancellationTokenSource.Token
+                : CancellationToken.None;
+
             HttpResponseMessage response = null;
-
-            var urlEncodedContent = new FormUrlEncodedContent(postData);
-            CancellationToken cancellationToken = cancellationTokenSource == null
-                ? CancellationToken.None
-                : cancellationTokenSource.Token;
-
             using (HttpClient httpClient = InitializeHttpClient())
             {
                 switch (requestType)
