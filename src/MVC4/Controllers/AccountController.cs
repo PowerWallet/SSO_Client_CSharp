@@ -106,8 +106,9 @@ namespace FinApps.SSO.MVC4.Controllers
             if (user.Errors != null && user.Errors.Any())
             {
                 foreach (var error in user.Errors)
+                {
                     ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-
+                }
                 return View(model);
             }
 
@@ -118,7 +119,6 @@ namespace FinApps.SSO.MVC4.Controllers
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
-
             logger.Info("Register => UserToken[{0}]", userToken);
 
             try
@@ -231,16 +231,18 @@ namespace FinApps.SSO.MVC4.Controllers
                     return View(model);
                 }
 
-                if (string.IsNullOrEmpty(finAppsUser.UserToken))
+                string userToken = finAppsUser.UserToken;
+                if (string.IsNullOrWhiteSpace(userToken))
                 {
-                    logger.Error("Manage => Error: Invalid user token.");
+                    logger.Warn("Manage => Error: Invalid UserToken result.");
                     ModelState.AddModelError("", "Unexpected error. Please try again.");
                     return View(model);
                 }
-                logger.Info("Manage => UserToken[{0}]", finAppsUser.UserToken);
+                logger.Info("Manage => UserToken[{0}]", userToken);
+
 
                 // updating usertoken on local profile
-                user.FinAppsUserToken = finAppsUser.UserToken;
+                user.FinAppsUserToken = userToken;
                 context.SaveChanges();
                 logger.Info("Manage => Profile Updated : UserToken");
 

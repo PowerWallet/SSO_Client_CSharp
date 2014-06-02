@@ -19,7 +19,7 @@ namespace FinApps.SSO.MVC5.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
         private IEnviromentConfigManager _configuration;
-        private IFinAppsRestClient<ServiceResult> _client;
+        private IFinAppsRestClient _client;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UsedImplicitly]
@@ -29,19 +29,19 @@ namespace FinApps.SSO.MVC5.Controllers
         }
 
         public PfmController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
-            IFinAppsRestClient<ServiceResult> finAppsRestClient)
+            IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
             _configuration = config;
             _client = finAppsRestClient;
         }
 
-        private FinAppsRestClient<ServiceResult> InitializeApiClient()
+        private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
                 _configuration = new EnviromentConfigManager();
 
-            return new FinAppsRestClient<ServiceResult>(
+            return new FinAppsRestClient(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
@@ -65,8 +65,16 @@ namespace FinApps.SSO.MVC5.Controllers
 
             if (_client == null)
                 _client = InitializeApiClient();
-            
-            string redirectUrl = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+
+            // creating new session on remote server
+            FinAppsUser newSessionUser = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+            if (newSessionUser.Errors != null)
+            {
+                logger.Error("Index => Error: Invalid redirect URL.");
+                return View("Error");
+            }
+
+            string redirectUrl = newSessionUser.SessionRedirectUrl;
             if (string.IsNullOrEmpty(redirectUrl))
             {
                 logger.Error("Index => Error: Invalid redirect URL.");

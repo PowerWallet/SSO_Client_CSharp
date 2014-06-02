@@ -3,24 +3,30 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using FinApps.SSO.RestClient_Base;
 using FinApps.SSO.RestClient_Base.Annotations;
-using FinApps.SSO.RestClient_Base.Enums;
 using FinApps.SSO.RestClient_Base.Model;
 using Newtonsoft.Json;
 
 namespace FinApps.SSO.RestClient_NET451
 {
     [UsedImplicitly]
-    public class FinAppsRestClient<T> : IFinAppsRestClient<T> where T : new()
+    public class FinAppsRestClient : IFinAppsRestClient
     {
         #region private members and constructor
 
         private const string ApiVersion = "1";
-        private readonly string _finAppsToken;
-        private readonly string _baseUrl;        
+        private static string _finAppsToken;
+        private static string _baseUrl;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FinAppsRestClient"/> class.
+        /// </summary>
+        /// <param name="baseUrl">The base URL for the API.</param>
+        /// <param name="companyIdentifier">The company identifier.</param>
+        /// <param name="companyToken">The company token.</param>
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
         {
             _baseUrl = baseUrl;
@@ -31,70 +37,101 @@ namespace FinApps.SSO.RestClient_NET451
         {
             get { return string.Format("finapps-csharp/{0} (.NET {1})", ExecutingAssembly.AssemblyVersion, Environment.Version); }
         }
-        
-        private async Task<T> SendAsync(string requestType,
-            IEnumerable<KeyValuePair<string, string>> postData,
-            string resource,
-            AuthenticationHeaderValue authenticationHeaderValue)
+
+        private static AuthenticationHeaderValue AuthenticationHeaderValue { get; set; }
+
+        private static void SetAuthenticationHeaderValue(FinAppsCredentials credentials)
         {
-            using (HttpClient httpClient = InitializeHttpClient(authenticationHeaderValue))
+            if (credentials == null)
+                AuthenticationHeaderValue = null;
+
+            AuthenticationHeaderValue = new AuthenticationHeaderValue("Basic", credentials.To64BaseEncodedCredentials());
+        }
+
+        /// <summary>
+        /// Sends an HTTP request as an asynchronous operation.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="requestType">Type of the request.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="postData">The post data.</param>
+        /// <param name="cancellationTokenSource">The cancellation token source.</param>
+        /// <returns></returns>
+        private static async Task<T> Send<T>(string requestType, string requestUri,
+            IEnumerable<KeyValuePair<string, string>> postData = null,
+            CancellationTokenSource cancellationTokenSource = null)
+            where T : FinAppsBase, new()
+        {
+            var t = new T();
+
+            try
             {
-                try
+                HttpResponseMessage response = await SendHttpRequest(requestType, requestUri, postData, cancellationTokenSource);
+                if (response != null && response.IsSuccessStatusCode)
                 {
-                    HttpResponseMessage response = null;
-                    switch (requestType)
-                    {
-                        case "POST":
-                            response = await httpClient.PostAsync(requestUri: resource, content: new FormUrlEncodedContent(postData));
-                            break;
-                        case "PUT":
-                            response = await httpClient.PutAsync(requestUri: resource, content: new FormUrlEncodedContent(postData));
-                            break;
-                        case "DELETE":
-                            response = await httpClient.DeleteAsync(requestUri: resource);
-                            break;
-                    }
-
-                    if (response == null || !response.IsSuccessStatusCode)
-                    {
-                        throw new Exception();
-                    }
-                    //return UnableToConnectServiceResult(response);
-
                     string result = await response.Content.ReadAsStringAsync();
                     return JsonConvert.DeserializeObject<T>(result);
                 }
-                catch (WebException ex)
+
+                AddResponseError(t, response);
+            }
+            catch (WebException ex)
+            {
+                t.Errors.Add(new FinAppsError { PropertyName = string.Empty, ErrorMessage = ex.Message });
+            }
+            catch (TaskCanceledException ex)
+            {
+                if (cancellationTokenSource != null && ex.CancellationToken == cancellationTokenSource.Token)
                 {
-                    Errors.Add(string.Empty, ex.Message);
+                    // Todo: Handle cancellation, triggered by the caller.
                 }
-                catch (TaskCanceledException ex)
+                t.Errors.Add(new FinAppsError { PropertyName = string.Empty, ErrorMessage = ex.Message });
+            }
+
+            return t;
+        }
+
+        private static void AddResponseError<T>(T t, HttpResponseMessage response = null) where T : FinAppsBase, new()
+        {
+            t.Errors.Add(new FinAppsError
+            {
+                PropertyName = string.Empty,
+                ErrorMessage = response != null
+                    ? string.Format("Unexpected error connecting to API server. Status Code: {0}.", response.StatusCode)
+                    : "Unexpected error connecting to API server."
+            });
+        }
+        
+        private static async Task<HttpResponseMessage> SendHttpRequest(string requestType, string requestUri,
+            IEnumerable<KeyValuePair<string, string>> postData = null,
+            CancellationTokenSource cancellationTokenSource = null)
+        {
+            HttpResponseMessage response = null;
+
+            var urlEncodedContent = new FormUrlEncodedContent(postData);
+            CancellationToken cancellationToken = cancellationTokenSource == null
+                ? CancellationToken.None
+                : cancellationTokenSource.Token;
+
+            using (HttpClient httpClient = InitializeHttpClient())
+            {
+                switch (requestType)
                 {
-                    Errors.Add(string.Empty, ex.Message);
+                    case "POST":
+                        response = await httpClient.PostAsync(requestUri, urlEncodedContent, cancellationToken);
+                        break;
+                    case "PUT":
+                        response = await httpClient.PutAsync(requestUri, urlEncodedContent, cancellationToken);
+                        break;
+                    case "DELETE":
+                        response = await httpClient.DeleteAsync(requestUri, cancellationToken);
+                        break;
                 }
             }
-            return new T();
+            return response;
         }
 
-        private async Task<T> PostAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
-            AuthenticationHeaderValue authenticationHeaderValue = null)
-        {
-            return await SendAsync("POST", postData, resource, authenticationHeaderValue);
-        }
-
-        private async Task<T> PutAsync(IEnumerable<KeyValuePair<string, string>> postData, string resource,
-            AuthenticationHeaderValue authenticationHeaderValue)
-        {
-            return await SendAsync("PUT", postData, resource, authenticationHeaderValue);
-        }
-
-        private async Task<T> DeleteAsync(string resource,
-            AuthenticationHeaderValue authenticationHeaderValue)
-        {
-            return await SendAsync("DELETE", null, resource, authenticationHeaderValue);
-        }
-
-        private HttpClient InitializeHttpClient()
+        private static HttpClient InitializeHttpClient()
         {
             var httpClient = new HttpClient
             {
@@ -106,24 +143,22 @@ namespace FinApps.SSO.RestClient_NET451
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Encoding", "gzip, deflate");
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-charset", "utf-8");
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UserAgent);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", _finAppsToken);
-
-            return httpClient;
-        }
-
-        private HttpClient InitializeHttpClient(AuthenticationHeaderValue authenticationHeaderValue)
-        {
-            var httpClient = InitializeHttpClient();
-
-            if (authenticationHeaderValue != null)
-                httpClient.DefaultRequestHeaders.Authorization = authenticationHeaderValue;
-
+            if (_finAppsToken != null)
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("X-FinApps-Token", _finAppsToken);
+            if (AuthenticationHeaderValue != null)
+                httpClient.DefaultRequestHeaders.Authorization = AuthenticationHeaderValue;
+            
             return httpClient;
         }
 
         #endregion
 
-        public async Task<T> NewUser(FinAppsUser finAppsUser)
+        /// <summary>
+        /// Creates a new user on FinApps application. If succesful, the response includes a UserToken that uniquely identifies the user. 
+        /// </summary>
+        /// <param name="finAppsUser">The Financial Apps user.</param>
+        /// <returns></returns>
+        public async Task<FinAppsUser> NewUser(FinAppsUser finAppsUser)
         {
             var postData = new List<KeyValuePair<string, string>>
             {
@@ -134,10 +169,17 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("PostalCode", finAppsUser.PostalCode)
             };
 
-            return await PostAsync(postData, "users/New");
+            SetAuthenticationHeaderValue(null);
+            return await Send<FinAppsUser>("POST", "users/New", postData);
         }
 
-        public async Task<string> NewSession(FinAppsCredentials finAppsCredentials, 
+        /// <summary>
+        /// Starts a new session on FinApps application. If succesful, a one time use SessionToken will be generated.
+        /// </summary>
+        /// <param name="finAppsCredentials">The fin apps credentials.</param>
+        /// <param name="clientIp">The client ip.</param>
+        /// <returns></returns>
+        public async Task<FinAppsUser> NewSession(FinAppsCredentials finAppsCredentials, 
             string clientIp)
         {
             var postData = new List<KeyValuePair<string, string>>
@@ -145,18 +187,19 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("ClientIp", clientIp),
             };
 
-            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
-
-            T serviceResult = await PostAsync(postData, "users/Login", authenticationHeaderValue);
-            //if (serviceResult == null || serviceResult.Result != ResultCodeTypes.SUCCESSFUL)
-            var result = serviceResult as ServiceResult;
-            if (result == null || result.Result != ResultCodeTypes.SUCCESSFUL)
-                return null;
-
-            return result.GetRedirectUrl();
+            SetAuthenticationHeaderValue(finAppsCredentials);
+            return await Send<FinAppsUser>("POST", "users/New", postData);
         }
 
-        public async Task<T> UpdateUserProfile(FinAppsCredentials finAppsCredentials,
+        /// <summary>
+        /// Updates the user profile. Only First Name, Last Name, Email and Postal Code are updated. 
+        /// Password s updated through the UpdatePassword call.
+        /// If Email changes, a new UserToken will be generated.
+        /// </summary>
+        /// <param name="finAppsCredentials">The fin apps credentials.</param>
+        /// <param name="finAppsUser">The fin apps user.</param>
+        /// <returns></returns>
+        public async Task<FinAppsUser> UpdateUserProfile(FinAppsCredentials finAppsCredentials,
             FinAppsUser finAppsUser)
         {
             var postData = new List<KeyValuePair<string, string>>
@@ -167,11 +210,18 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("PostalCode", finAppsUser.PostalCode)
             };
 
-            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
-            return await PutAsync(postData, "users/Update", authenticationHeaderValue);
+            SetAuthenticationHeaderValue(finAppsCredentials);
+            return await Send<FinAppsUser>("PUT", "users/Update", postData);
         }
 
-        public async Task<T> UpdateUserPassword(FinAppsCredentials finAppsCredentials, 
+        /// <summary>
+        /// Updates the user password. If succesful, a new UserToken will be generated.
+        /// </summary>
+        /// <param name="finAppsCredentials">The fin apps credentials.</param>
+        /// <param name="oldPassword">The old password.</param>
+        /// <param name="newPassword">The new password.</param>
+        /// <returns></returns>
+        public async Task<FinAppsUser> UpdateUserPassword(FinAppsCredentials finAppsCredentials, 
             string oldPassword, string newPassword)
         {
             var postData = new List<KeyValuePair<string, string>>
@@ -180,16 +230,19 @@ namespace FinApps.SSO.RestClient_NET451
                 new KeyValuePair<string, string>("NewPassword", newPassword)
             };
 
-            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
-            return await PutAsync(postData, "users/UpdatePassword", authenticationHeaderValue);
+            SetAuthenticationHeaderValue(finAppsCredentials);
+            return await Send<FinAppsUser>("PUT", "users/UpdatePassword", postData);
         }
 
-        public async Task<T> DeleteUser(FinAppsCredentials finAppsCredentials)
+        /// <summary>
+        /// Deletes the user from FinApps.
+        /// </summary>
+        /// <param name="finAppsCredentials">The fin apps credentials.</param>
+        /// <returns></returns>
+        public async Task<FinAppsUser> DeleteUser(FinAppsCredentials finAppsCredentials)
         {
-            var authenticationHeaderValue = new AuthenticationHeaderValue("Basic", finAppsCredentials.To64BaseEncodedCredentials());
-            return await DeleteAsync("users/Delete", authenticationHeaderValue);
+            SetAuthenticationHeaderValue(finAppsCredentials);
+            return await Send<FinAppsUser>("DELETE", "users/Delete");
         }
-
-        public Dictionary<string, string> Errors { get; private set; }  
     }
 }

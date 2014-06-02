@@ -24,7 +24,7 @@ namespace FinApps.SSO.MVC5.Controllers
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly UserManager<ApplicationUser> _userManager;
         private IEnviromentConfigManager _configuration;
-        private IFinAppsRestClient<ServiceResult> _client;
+        private IFinAppsRestClient _client;
 
         [UsedImplicitly]
         public AccountController()
@@ -35,19 +35,19 @@ namespace FinApps.SSO.MVC5.Controllers
         }
 
         public AccountController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
-            IFinAppsRestClient<ServiceResult> finAppsRestClient)
+            IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
             _configuration = config;
             _client = finAppsRestClient;
         }
 
-        private FinAppsRestClient<ServiceResult> InitializeApiClient()
+        private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
                 _configuration = new EnviromentConfigManager();
 
-            return new FinAppsRestClient<ServiceResult>(
+            return new FinAppsRestClient(
                 baseUrl: _configuration.Get("FinAppsDemoUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
@@ -130,30 +130,30 @@ namespace FinApps.SSO.MVC5.Controllers
 
             if (_client == null)
                 _client = InitializeApiClient();
-            ServiceResult serviceResult = await _client.NewUser(model.ToFinAppsUser());
-
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            FinAppsUser user = await _client.NewUser(model.ToFinAppsUser());
+            if (user.Errors != null && user.Errors.Any())
             {
-                LogModelStateErrors();
+                foreach (var error in user.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                }
                 return View(model);
             }
 
-            string userToken = serviceResult.GetUserToken();
+            string userToken = user.UserToken;
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 logger.Warn("Register => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
                 return View(model);
             }
-
             logger.Info("Register => UserToken[{0}]", userToken);
 
-            ApplicationUser user = model.ToApplicationUser(finAppsUserToken: userToken);
-            IdentityResult identityResult = await _userManager.CreateAsync(user, model.Password);
+            ApplicationUser applicationUser = model.ToApplicationUser(finAppsUserToken: userToken);
+            IdentityResult identityResult = await _userManager.CreateAsync(applicationUser, model.Password);
             if (identityResult.Succeeded)
             {
-                await SignInAsync(user, isPersistent: false);
+                await SignInAsync(applicationUser, isPersistent: false);
                 logger.Info("Register => Success. Redirecting to {0}", Url.Action("Index", "Home"));
                 return RedirectToAction("Index", "Home");
             }
@@ -206,23 +206,25 @@ namespace FinApps.SSO.MVC5.Controllers
                 _client = InitializeApiClient();
 
             // updating profile on remote service
-            ServiceResult serviceResult = await _client.UpdateUserProfile(credentials, finAppsUser);
-            ValidateServiceResult(serviceResult);
-            if (!ModelState.IsValid)
+            FinAppsUser updatedUser = await _client.UpdateUserProfile(credentials, finAppsUser);
+            if (updatedUser.Errors != null && updatedUser.Errors.Any())
             {
-                LogModelStateErrors();
+                foreach (var error in updatedUser.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                }
                 return View("UpdateProfile", model);
             }
 
-            string userToken = serviceResult.GetUserToken();
+            string userToken = updatedUser.UserToken;
             if (string.IsNullOrWhiteSpace(userToken))
             {
                 logger.Warn("Update Profile => Error: Invalid UserToken result.");
                 ModelState.AddModelError("", "Unexpected error. Please try again.");
-                return View("UpdateProfile", model);
+                return View(model);
             }
-
             logger.Info("Update Profile => UserToken[{0}]", userToken);
+
             
             // updating local profile
             user.FinAppsUserToken = userToken;
@@ -273,10 +275,13 @@ namespace FinApps.SSO.MVC5.Controllers
                     _client = InitializeApiClient();
 
                 // delete account on remote service
-                ServiceResult serviceResult = await _client.DeleteUser(credentials);
-                ValidateServiceResult(serviceResult);
-                if (!ModelState.IsValid)
+                FinAppsUser deletedUser = await _client.DeleteUser(credentials);
+                if (deletedUser.Errors != null && deletedUser.Errors.Any())
                 {
+                    foreach (var error in deletedUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
                     LogModelStateErrors();
                     return View("Delete");
                 }
@@ -348,22 +353,25 @@ namespace FinApps.SSO.MVC5.Controllers
                     _client = InitializeApiClient();
 
                 // updating password on remote service
-                ServiceResult serviceResult = await _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
-                ValidateServiceResult(serviceResult);
-                if (!ModelState.IsValid)
+                FinAppsUser updatedUser = await _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
+                if (updatedUser.Errors != null)
                 {
-                    LogModelStateErrors();
+                    foreach (var error in updatedUser.Errors)
+                    {
+                        ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                    }
+                    logger.Error("Manage => Error: Model validation errors.");
                     return View(model);
                 }
 
-                string userToken = serviceResult.GetUserToken();
+
+                string userToken = updatedUser.UserToken;
                 if (string.IsNullOrWhiteSpace(userToken))
                 {
                     logger.Warn("Manage => Error: Invalid UserToken result.");
                     ModelState.AddModelError("", "Unexpected error. Please try again.");
                     return View(model);
                 }
-
                 logger.Info("Manage => UserToken[{0}]", userToken);
 
 
@@ -375,8 +383,7 @@ namespace FinApps.SSO.MVC5.Controllers
                     ModelState.AddModelError("", "Unexpected error. Please try again.");
                     return View(model);
                 }
-
-                logger.Info("Profile Updated => UserToken");
+                logger.Info("Manage => Profile Updated : UserToken");
                 
                 // update local password
                 IdentityResult result = await _userManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
