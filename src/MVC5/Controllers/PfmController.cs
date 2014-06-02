@@ -2,12 +2,13 @@
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using FinApps.SSO.MVC5.Models;
-using FinApps.SSO.MVC5.Services;
-using FinApps.SSO.RestClient;
-using FinApps.SSO.RestClient.Annotations;
+using FinApps.SSO.RestClient_Base.Annotations;
+using FinApps.SSO.RestClient_Base.Model;
+using FinApps.SSO.RestClient_NET451;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using NLog;
+using Quintsys.EnviromentConfigurationManager;
 
 namespace FinApps.SSO.MVC5.Controllers
 {
@@ -17,9 +18,9 @@ namespace FinApps.SSO.MVC5.Controllers
         #region private members and constructors
 
         private readonly UserManager<ApplicationUser> _userManager;
-        private IConfig _configuration;
+        private IEnviromentConfigManager _configuration;
         private IFinAppsRestClient _client;
-        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+        private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         [UsedImplicitly]
         public PfmController()
@@ -27,7 +28,7 @@ namespace FinApps.SSO.MVC5.Controllers
         {
         }
 
-        public PfmController(UserManager<ApplicationUser> userManager, IConfig config,
+        public PfmController(UserManager<ApplicationUser> userManager, IEnviromentConfigManager config,
             IFinAppsRestClient finAppsRestClient)
         {
             _userManager = userManager;
@@ -38,10 +39,10 @@ namespace FinApps.SSO.MVC5.Controllers
         private FinAppsRestClient InitializeApiClient()
         {
             if (_configuration == null)
-                _configuration = new Config();
+                _configuration = new EnviromentConfigManager();
 
             return new FinAppsRestClient(
-                baseUrl: _configuration.Get("FinAppsDemoUrl"),
+                baseUrl: _configuration.Get("FinAppsUrl"),
                 companyIdentifier: _configuration.Get("FinAppsCompanyIdentifier"),
                 companyToken: _configuration.Get("FinAppsCompanyToken"));
         }
@@ -58,28 +59,36 @@ namespace FinApps.SSO.MVC5.Controllers
             ApplicationUser user = _userManager.FindById(User.Identity.GetUserId());
             if (!IsValidUser(user))
             {
-                Logger.Error("Index => Error: Not a valid user.");
+                logger.Error("Index => Error: Not a valid user.");
                 return View("Error");
             }
 
             if (_client == null)
                 _client = InitializeApiClient();
-            
-            string redirectUrl = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+
+            // creating new session on remote server
+            FinAppsUser newSessionUser = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+            if (newSessionUser.Errors != null)
+            {
+                logger.Error("Index => Error: Invalid redirect URL.");
+                return View("Error");
+            }
+
+            string redirectUrl = newSessionUser.SessionRedirectUrl;
             if (string.IsNullOrEmpty(redirectUrl))
             {
-                Logger.Error("Index => Error: Invalid redirect URL.");
+                logger.Error("Index => Error: Invalid redirect URL.");
                 return View("Error");
             }
             
             Uri absoluteUrl;
             if (!Uri.TryCreate(redirectUrl, UriKind.Absolute, out absoluteUrl))
             {
-                Logger.Error("Index => Error: Invalid redirect URL.");
+                logger.Error("Index => Error: Invalid redirect URL.");
                 return (ActionResult) View("Error");
             }
             
-            Logger.Info("Index => Redirecting to {0}", absoluteUrl);
+            logger.Info("Index => Redirecting to {0}", absoluteUrl);
             return Redirect(absoluteUrl.ToString());
         }
     }
