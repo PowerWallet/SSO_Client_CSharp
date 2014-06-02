@@ -56,7 +56,7 @@ namespace FinApps.SSO.RestClient_NET40
             Require.Argument("Password", finAppsUser.Password);
             Require.Argument("PostalCode", finAppsUser.PostalCode);
 
-            RestRequest request = CreateRestRequest(Method.POST, Resources.NewUser);
+            RestRequest request = CreateRestRequest(Method.POST, ApiUris.NewUser);
             request.AddParameter("Email", finAppsUser.Email);
             request.AddParameter("Password", finAppsUser.Password);
             request.AddParameter("PostalCode", finAppsUser.PostalCode);
@@ -71,7 +71,7 @@ namespace FinApps.SSO.RestClient_NET40
 
         public FinAppsUser NewSession(FinAppsCredentials credentials, string clientIp)
         {
-            RestRequest request = CreateRestRequest(Method.POST, Resources.NewSession);        
+            RestRequest request = CreateRestRequest(Method.POST, ApiUris.NewSession);        
             if (string.IsNullOrWhiteSpace(clientIp))
                 request.AddParameter("ClientIp", clientIp);
 
@@ -81,7 +81,7 @@ namespace FinApps.SSO.RestClient_NET40
 
         public FinAppsUser UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser)
         {
-            RestRequest request = CreateRestRequest(Method.PUT, Resources.UpdateUserProfile);
+            RestRequest request = CreateRestRequest(Method.PUT, ApiUris.UpdateUserProfile);
             var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
             return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
@@ -92,7 +92,7 @@ namespace FinApps.SSO.RestClient_NET40
             Require.Argument("OldPassword", oldPassword);
             Require.Argument("NewPassword", newPassword);
 
-            RestRequest request = CreateRestRequest(Method.PUT, Resources.UpdateUserPassword);
+            RestRequest request = CreateRestRequest(Method.PUT, ApiUris.UpdateUserPassword);
             request.AddParameter("OldPassword", oldPassword);
             request.AddParameter("NewPassword", newPassword);
 
@@ -102,7 +102,7 @@ namespace FinApps.SSO.RestClient_NET40
 
         public FinAppsUser DeleteUser(FinAppsCredentials credentials)
         {
-            RestRequest request = CreateRestRequest(Method.DELETE, Resources.DeleteUser);
+            RestRequest request = CreateRestRequest(Method.DELETE, ApiUris.DeleteUser);
             var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
             return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
         }
