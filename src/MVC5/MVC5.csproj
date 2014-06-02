@@ -56,8 +56,9 @@
     <Reference Include="FinApps.SSO.RestClient_Base">
       <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
     </Reference>
-    <Reference Include="FinApps.SSO.RestClient_NET451">
-      <HintPath>..\packages\FinApps.ApiClient.1.0.3\lib\Net451\FinApps.SSO.RestClient_NET451.dll</HintPath>
+    <Reference Include="FinApps.SSO.RestClient_NET451, Version=1.0.4.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\FinApps.ApiClient.1.0.4\lib\Net451\FinApps.SSO.RestClient_NET451.dll</HintPath>
     </Reference>
     <Reference Include="LogentriesCore">
       <HintPath>..\packages\logentries.core.2.4.4\lib\net40\LogentriesCore.dll</HintPath>
