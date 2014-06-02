@@ -15,11 +15,6 @@ namespace FinApps.SSO.MVC4.Models
         }
 
         public DbSet<UserProfile> UserProfiles { get; set; }
-
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
-        {
-            Database.SetInitializer(new MigrateDatabaseToLatestVersion<UsersContext, Configuration>());
-        }
     }
 
     [Table("UserProfile")]

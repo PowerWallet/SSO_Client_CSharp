@@ -3,6 +3,7 @@ using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Threading;
 using System.Web.Mvc;
+using FinApps.SSO.MVC4.Migrations;
 using FinApps.SSO.MVC4.Models;
 using NLog;
 using WebMatrix.WebData;
@@ -29,7 +30,7 @@ namespace FinApps.SSO.MVC4.Filters
         {
             public SimpleMembershipInitializer()
             {
-                Database.SetInitializer<UsersContext>(null);
+                Database.SetInitializer<UsersContext>(new MigrateDatabaseToLatestVersion<UsersContext, Configuration>());
 
                 try
                 {

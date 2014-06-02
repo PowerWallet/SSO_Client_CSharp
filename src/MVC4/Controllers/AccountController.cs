@@ -19,7 +19,6 @@ using WebMatrix.WebData;
 namespace FinApps.SSO.MVC4.Controllers
 {
     [Authorize]
-    [InitializeSimpleMembership]
     public class AccountController : Controller
     {
         #region private members and constructor
