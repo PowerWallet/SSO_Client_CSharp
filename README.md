@@ -212,10 +212,10 @@ Install REST API client:
 
 #### Create a user:
 
-    using FinApps.SSO.RestClient;
-    using FinApps.SSO.RestClient.Annotations;
-    using FinApps.SSO.RestClient.Enum;
-    using FinApps.SSO.RestClient.Model;
+    using FinApps.SSO.MVC5.Models;
+    using FinApps.SSO.RestClient_Base.Annotations;
+    using FinApps.SSO.RestClient_Base.Model;
+    using FinApps.SSO.RestClient_NET451;
     
     var user = new FinAppsUser
             {
@@ -230,9 +230,12 @@ Install REST API client:
                 companyIdentifier: "ACME Inc.",
                 companyToken: "my-secret-token!");
                 
-    ServiceResult serviceResult = await _client.NewUser(user);
-    if(serviceResult != null && serviceResult.Result == ResultCodeTypes.ACCOUNT_NewCustomerUserSavedSuccess){
-        string userToken = serviceResult.GetUserToken();
+    FinAppsUser newUser = await _client.NewUser(user);
+    if (newUser.Errors != null && newUser.Errors.Any())
+        ' handle errors
+    } else {
+        string userToken = newUser.UserToken;
+        ' save userToken locally
     }
     
 
@@ -240,9 +243,9 @@ Install REST API client:
 #### Initiate a FinApps session:
 
     using FinApps.SSO.MVC5.Models;
-    using FinApps.SSO.MVC5.Services;
-    using FinApps.SSO.RestClient;
-    using FinApps.SSO.RestClient.Annotations;
+    using FinApps.SSO.RestClient_Base.Annotations;
+    using FinApps.SSO.RestClient_Base.Model;
+    using FinApps.SSO.RestClient_NET451;
     
 
     var credentials = new FinAppsCredentials
@@ -253,14 +256,108 @@ Install REST API client:
     var client = new FinAppsRestClient(
                 baseUrl: "https://finapps.com/api/v1/",
                 companyIdentifier: "ACME Inc.",
-                companyToken: "my-secret-token!");            
+                companyToken: "my-secret-token!");           
                 
-    string redirectUrl = await _client.NewSession(credentials, Request.UserHostAddress);
+    FinAppsUser newSessionUser = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
+    if (newSessionUser.Errors != null && newSessionUser.Errors.Any())
+        ' handle errors
+    } else {
+        string redirectUrl = newSessionUser.SessionRedirectUrl;
+        ' redirect to FinApps using above url
+    }    
+      
     
     
+#### Update a User Profile:
+
+    using FinApps.SSO.MVC5.Models;
+    using FinApps.SSO.RestClient_Base.Annotations;
+    using FinApps.SSO.RestClient_Base.Model;
+    using FinApps.SSO.RestClient_NET451;
+    
+
+    var credentials = new FinAppsCredentials
+            {
+                Email = "user@example.com",
+                FinAppsUserToken = "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+            };
+    var user = new FinAppsUser
+            {
+                FirstName = "John L",
+                LastName = "Perez",
+                Email = "user.new@example.com",
+                PostalCode = "12345"
+            };            
+    var client = new FinAppsRestClient(
+                baseUrl: "https://finapps.com/api/v1/",
+                companyIdentifier: "ACME Inc.",
+                companyToken: "my-secret-token!");           
+                
+    FinAppsUser updatedUser = await _client.UpdateUserProfile(credentials, user);
+    if (updatedUser.Errors != null && updatedUser.Errors.Any())
+        ' handle errors
+    } else {
+        string userToken = updatedUser.UserToken;
+        ' save userToken locally
+    }   
+    
+    
+#### Update a User Password:
+
+    using FinApps.SSO.MVC5.Models;
+    using FinApps.SSO.RestClient_Base.Annotations;
+    using FinApps.SSO.RestClient_Base.Model;
+    using FinApps.SSO.RestClient_NET451;
+    
+
+    var credentials = new FinAppsCredentials
+            {
+                Email = "user@example.com",
+                FinAppsUserToken = "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+            };
+            
+    var client = new FinAppsRestClient(
+                baseUrl: "https://finapps.com/api/v1/",
+                companyIdentifier: "ACME Inc.",
+                companyToken: "my-secret-token!");           
+                
+    FinAppsUser updatedUser = await _client.UpdateUserPassword(credentials, oldPassword, newPassword);
+    if (updatedUser.Errors != null && updatedUser.Errors.Any())
+        ' handle errors
+    } else {
+        string userToken = updatedUser.UserToken;
+        ' save userToken locally
+    }    
+        
+         
+#### Delete a User:
+
+    using FinApps.SSO.MVC5.Models;
+    using FinApps.SSO.RestClient_Base.Annotations;
+    using FinApps.SSO.RestClient_Base.Model;
+    using FinApps.SSO.RestClient_NET451;
+    
+
+    var credentials = new FinAppsCredentials
+            {
+                Email = "user@example.com",
+                FinAppsUserToken = "4Btuz6TJQU/KcKe8Te+l8F2Gi0ut4x7HMSD56vh3rUk="
+            };
+            
+    var client = new FinAppsRestClient(
+                baseUrl: "https://finapps.com/api/v1/",
+                companyIdentifier: "ACME Inc.",
+                companyToken: "my-secret-token!");           
+                
+    FinAppsUser deletedUser = await _client.DeleteUser(credentials);
+    if (deletedUser.Errors != null && deletedUser.Errors.Any())
+        ' handle errors
+    } 
+    
+            
 #### Demo Application     
     
-[http://sso-csharp.apphb.com/](http://sso-csharp.apphb.com/)
+[http://sso-mvc5.apphb.com/](http://sso-mvc5.apphb.com/)
 
 
     
