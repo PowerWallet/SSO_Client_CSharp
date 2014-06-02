@@ -7,7 +7,6 @@ namespace FinApps.SSO.MVC4.Migrations
         public Configuration()
         {
             AutomaticMigrationsEnabled = true;
-            AutomaticMigrationDataLossAllowed = true;
         }
 
         protected override void Seed(Models.UsersContext context)
