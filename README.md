@@ -42,7 +42,7 @@ Install REST API client:
 
 ### Sample Usage
 
-* [net40] - .NET Framework 4
+* [net40] - .NET Framework 4.0.0
 * [net451] - .NET Framework 4.5.1
 
 [net40]:https://github.com/PowerWallet/SSO_Client_CSharp/blob/master/net40.md
