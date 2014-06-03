@@ -37,7 +37,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExecutingAssembly.cs" />
     <Compile Include="Model\FinAppsBase.cs" />
     <Compile Include="Model\FinAppsCredentials.cs" />
     <Compile Include="Model\FinAppsError.cs" />
