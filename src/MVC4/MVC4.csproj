@@ -76,7 +76,8 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>..\packages\EntityFramework.6.1.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="FinApps.SSO.RestClient_Base">
+    <Reference Include="FinApps.SSO.RestClient_Base, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
     </Reference>
     <Reference Include="FinApps.SSO.RestClient_NET40, Version=1.0.5.0, Culture=neutral, processorArchitecture=MSIL">
@@ -111,7 +112,8 @@
     <Reference Include="Quintsys.EnviromentConfigurationManager">
       <HintPath>..\packages\Quintsys.EnviromentConfigurationManager.1.0.1\lib\Quintsys.EnviromentConfigurationManager.dll</HintPath>
     </Reference>
-    <Reference Include="RestSharp">
+    <Reference Include="RestSharp, Version=104.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\RestSharp.104.4.0\lib\net4\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="System" />

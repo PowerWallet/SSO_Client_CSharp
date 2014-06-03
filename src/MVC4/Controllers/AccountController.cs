@@ -6,7 +6,6 @@ using System.Transactions;
 using System.Web.Mvc;
 using System.Web.Security;
 using DotNetOpenAuth.AspNet;
-using FinApps.SSO.MVC4.Filters;
 using FinApps.SSO.MVC4.Models;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Model;
