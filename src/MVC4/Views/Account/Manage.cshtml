@@ -9,7 +9,9 @@
 
 <p class="message-success">@ViewBag.StatusMessage</p>
 
-<p>You're logged in as <strong>@User.Identity.Name</strong>.</p>
+<section id="profile">
+    @Html.Action("UpdateProfile", "Account")
+</section>
 
 @(ViewBag.HasLocalPassword
       ? Html.Partial("_ChangePasswordPartial")

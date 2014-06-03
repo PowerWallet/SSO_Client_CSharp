@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Transactions;
@@ -7,13 +8,13 @@ using System.Web.Mvc;
 using System.Web.Security;
 using DotNetOpenAuth.AspNet;
 using FinApps.SSO.MVC4.Models;
-using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Model;
 using FinApps.SSO.RestClient_NET40;
 using Microsoft.Web.WebPages.OAuth;
 using NLog;
 using Quintsys.EnviromentConfigurationManager;
 using WebMatrix.WebData;
+using IsolationLevel = System.Transactions.IsolationLevel;
 
 namespace FinApps.SSO.MVC4.Controllers
 {
@@ -25,12 +26,13 @@ namespace FinApps.SSO.MVC4.Controllers
         private readonly IFinAppsRestClient _client;
         private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
+        // ReSharper disable once UnusedMember.Global
         public AccountController(IFinAppsRestClient client)
         {
             _client = client;
         }
 
-        [UsedImplicitly]
+        // ReSharper disable once UnusedMember.Global
         public AccountController()
         {
             IEnviromentConfigManager configuration = new EnviromentConfigManager();
@@ -158,7 +160,7 @@ namespace FinApps.SSO.MVC4.Controllers
                 // Use a transaction to prevent the user from deleting their last login credential
                 using (
                     var scope = new TransactionScope(TransactionScopeOption.Required,
-                        new TransactionOptions {IsolationLevel = IsolationLevel.Serializable}))
+                        new TransactionOptions { IsolationLevel = IsolationLevel.Serializable }))
                 {
                     bool hasLocalAccount = OAuthWebSecurity.HasLocalAccount(WebSecurity.GetUserId(User.Identity.Name));
                     if (hasLocalAccount || OAuthWebSecurity.GetAccountsFromUserName(User.Identity.Name).Count > 1)
@@ -170,7 +172,7 @@ namespace FinApps.SSO.MVC4.Controllers
                 }
             }
 
-            return RedirectToAction("Manage", new {Message = message});
+            return RedirectToAction("Manage", new { Message = message });
         }
 
         public ActionResult Manage(ManageMessageId? message)
@@ -185,6 +187,9 @@ namespace FinApps.SSO.MVC4.Controllers
                     break;
                 case ManageMessageId.RemoveLoginSuccess:
                     ViewBag.StatusMessage = "The external login was removed.";
+                    break;
+                case ManageMessageId.ProfileUpdatedSuccess:
+                    ViewBag.StatusMessage = "Your profile has been updated.";
                     break;
                 default:
                     ViewBag.StatusMessage = string.Empty;
@@ -217,7 +222,7 @@ namespace FinApps.SSO.MVC4.Controllers
                     return new HttpUnauthorizedResult();
                 }
                 FinAppsCredentials credentials = user.ToFinAppsCredentials();
-                
+
                 // updating password on remote service
                 FinAppsUser finAppsUser = _client.UpdateUserPassword(credentials, model.OldPassword, model.NewPassword);
                 if (finAppsUser.Errors != null)
@@ -245,7 +250,7 @@ namespace FinApps.SSO.MVC4.Controllers
                 context.SaveChanges();
                 logger.Info("Manage => Profile Updated : UserToken");
 
-                
+
                 // ChangePassword will throw an exception rather than return false in certain failure scenarios.
                 bool changePasswordSucceeded;
                 try
@@ -258,7 +263,7 @@ namespace FinApps.SSO.MVC4.Controllers
                 }
 
                 if (changePasswordSucceeded)
-                    return RedirectToAction("Manage", new {Message = ManageMessageId.ChangePasswordSuccess});
+                    return RedirectToAction("Manage", new { Message = ManageMessageId.ChangePasswordSuccess });
 
                 ModelState.AddModelError("", "The current password is incorrect or the new password is invalid.");
             }
@@ -276,7 +281,7 @@ namespace FinApps.SSO.MVC4.Controllers
                 try
                 {
                     WebSecurity.CreateAccount(User.Identity.Name, model.NewPassword);
-                    return RedirectToAction("Manage", new {Message = ManageMessageId.SetPasswordSuccess});
+                    return RedirectToAction("Manage", new { Message = ManageMessageId.SetPasswordSuccess });
                 }
                 catch (Exception)
                 {
@@ -296,14 +301,14 @@ namespace FinApps.SSO.MVC4.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult ExternalLogin(string provider, string returnUrl)
         {
-            return new ExternalLoginResult(provider, Url.Action("ExternalLoginCallback", new {ReturnUrl = returnUrl}));
+            return new ExternalLoginResult(provider, Url.Action("ExternalLoginCallback", new { ReturnUrl = returnUrl }));
         }
 
         [AllowAnonymous]
         public ActionResult ExternalLoginCallback(string returnUrl)
         {
             AuthenticationResult result =
-                OAuthWebSecurity.VerifyAuthentication(Url.Action("ExternalLoginCallback", new {ReturnUrl = returnUrl}));
+                OAuthWebSecurity.VerifyAuthentication(Url.Action("ExternalLoginCallback", new { ReturnUrl = returnUrl }));
             if (!result.IsSuccessful)
             {
                 return RedirectToAction("ExternalLoginFailure");
@@ -326,7 +331,7 @@ namespace FinApps.SSO.MVC4.Controllers
             ViewBag.ProviderDisplayName = OAuthWebSecurity.GetOAuthClientData(result.Provider).DisplayName;
             ViewBag.ReturnUrl = returnUrl;
             return View("ExternalLoginConfirmation",
-                new RegisterExternalLoginModel {Email = result.UserName, ExternalLoginData = loginData});
+                new RegisterExternalLoginModel { Email = result.UserName, ExternalLoginData = loginData });
         }
 
         [HttpPost]
@@ -355,7 +360,7 @@ namespace FinApps.SSO.MVC4.Controllers
                     if (user == null)
                     {
                         // Insert name into the profile table
-                        db.UserProfiles.Add(new UserProfile {Email = model.Email});
+                        db.UserProfiles.Add(new UserProfile { Email = model.Email });
                         db.SaveChanges();
 
                         OAuthWebSecurity.CreateOrUpdateAccount(provider, providerUserId, model.Email);
@@ -392,13 +397,13 @@ namespace FinApps.SSO.MVC4.Controllers
         {
             ICollection<OAuthAccount> accounts = OAuthWebSecurity.GetAccountsFromUserName(User.Identity.Name);
             var externalLogins = (from account in accounts
-                let clientData = OAuthWebSecurity.GetOAuthClientData(account.Provider)
-                select new ExternalLogin
-                {
-                    Provider = account.Provider,
-                    ProviderDisplayName = clientData.DisplayName,
-                    ProviderUserId = account.ProviderUserId,
-                })
+                                  let clientData = OAuthWebSecurity.GetOAuthClientData(account.Provider)
+                                  select new ExternalLogin
+                                  {
+                                      Provider = account.Provider,
+                                      ProviderDisplayName = clientData.DisplayName,
+                                      ProviderUserId = account.ProviderUserId,
+                                  })
                 .ToList();
 
             ViewBag.ShowRemoveButton = externalLogins.Count > 1 ||
@@ -449,7 +454,7 @@ namespace FinApps.SSO.MVC4.Controllers
                     LogModelStateErrors();
                     return View();
                 }
-                
+
                 logger.Info("Account deleted from remote service.");
             }
 
@@ -478,6 +483,7 @@ namespace FinApps.SSO.MVC4.Controllers
             ChangePasswordSuccess,
             SetPasswordSuccess,
             RemoveLoginSuccess,
+            ProfileUpdatedSuccess
         }
 
         private class ExternalLoginResult : ActionResult
@@ -545,6 +551,77 @@ namespace FinApps.SSO.MVC4.Controllers
         public ActionResult Deleted()
         {
             return View();
+        }
+
+        [ChildActionOnly]
+        public PartialViewResult UpdateProfile()
+        {
+            var context = new UsersContext();
+            UserProfile user = context.UserProfiles.FirstOrDefault(u => u.Email == User.Identity.Name);
+            var model = new UpdateProfileViewModel(user);
+
+            return PartialView("_UpdateProfile", model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UpdateProfile(UpdateProfileViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View("UpdateProfile", model);
+            }
+
+            var context = new UsersContext();
+            UserProfile user = context.UserProfiles.FirstOrDefault(u => u.Email == User.Identity.Name);
+            if (user == null)
+            {
+                logger.Error("UpdateProfile => Error: User not found.");
+                throw new NoNullAllowedException();
+            }
+
+            FinAppsCredentials credentials = user.ToFinAppsCredentials();
+            FinAppsUser finAppsUser = model.ToFinAppsUser();
+
+
+            // updating profile on remote service
+            FinAppsUser updatedUser = _client.UpdateUserProfile(credentials, finAppsUser);
+            if (updatedUser.Errors != null && updatedUser.Errors.Any())
+            {
+                foreach (var error in updatedUser.Errors)
+                {
+                    ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+                }
+                LogModelStateErrors();
+                return View("UpdateProfile", model);
+            }
+
+            string userToken = updatedUser.UserToken;
+            if (string.IsNullOrWhiteSpace(userToken))
+            {
+                logger.Warn("UpdateProfile => Error: Invalid UserToken result.");
+                ModelState.AddModelError("", "Unexpected error. Please try again.");
+                return View(model);
+            }
+            logger.Info("UpdateProfile => UserToken[{0}]", userToken);
+
+            try
+            {
+                // updating local profile
+                user.FinAppsUserToken = userToken;
+                user.UpdateFromViewModel(model);
+                context.SaveChanges();
+                logger.Info("UpdateProfile => Profile Updated");
+
+                return RedirectToAction("Manage", new { Message = ManageMessageId.ProfileUpdatedSuccess });
+            }
+            catch (Exception ex)
+            {
+                logger.Error("UpdateProfile => Error: {0}", ex.Message);
+                ModelState.AddModelError("", "Unexpected error. Please try again.");
+
+                return View("UpdateProfile", model);
+            }
         }
     }
 }

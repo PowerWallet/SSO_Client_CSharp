@@ -1,18 +1,9 @@
-﻿@model FinApps.SSO.MVC4.Models.RegisterModel
-@{
-    ViewBag.Title = "Register";
-}
+﻿@model FinApps.SSO.MVC4.Controllers.UpdateProfileViewModel
 
-<hgroup class="title">
-    <h1>@ViewBag.Title.</h1>
-    <h2>Create a new account.</h2>
-</hgroup>
-
-@using (Html.BeginForm())
+@using (Html.BeginForm( "UpdateProfile", "Account", FormMethod.Post))
 {
     @Html.AntiForgeryToken()
-    @Html.ValidationSummary(excludePropertyErrors: false)
-
+    
     <fieldset>
         <legend>Registration Form</legend>
         <ol>
@@ -29,23 +20,10 @@
                 @Html.TextBoxFor(m => m.Email)
             </li>
             <li>
-                @Html.LabelFor(m => m.Password)
-                @Html.PasswordFor(m => m.Password)
-            </li>
-            <li>
-                @Html.LabelFor(m => m.ConfirmPassword)
-                @Html.PasswordFor(m => m.ConfirmPassword)
-            </li>
-
-            <li>
                 @Html.LabelFor(m => m.PostalCode)
                 @Html.TextBoxFor(m => m.PostalCode)
             </li>
         </ol>
-        <input type="submit" value="Register" />
+        <input type="submit" value="Update Profile" />
     </fieldset>
-}
-
-@section Scripts {
-    @Scripts.Render("~/bundles/jqueryval")
 }

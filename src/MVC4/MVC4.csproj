@@ -76,13 +76,13 @@
     <Reference Include="EntityFramework.SqlServer">
       <HintPath>..\packages\EntityFramework.6.1.0\lib\net40\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
-    <Reference Include="FinApps.SSO.RestClient_Base, Version=1.0.1.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="FinApps.SSO.RestClient_Base, Version=1.0.2.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\FinApps.ApiClient.Base.1.0.1\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
+      <HintPath>..\packages\FinApps.ApiClient.Base.1.0.2\lib\FinApps.SSO.RestClient_Base.dll</HintPath>
     </Reference>
-    <Reference Include="FinApps.SSO.RestClient_NET40, Version=1.0.6.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="FinApps.SSO.RestClient_NET40, Version=1.0.7.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\FinApps.ApiClient.1.0.6\lib\net40\FinApps.SSO.RestClient_NET40.dll</HintPath>
+      <HintPath>..\packages\FinApps.ApiClient.1.0.7\lib\net40\FinApps.SSO.RestClient_NET40.dll</HintPath>
     </Reference>
     <Reference Include="LogentriesCore">
       <HintPath>..\packages\logentries.core.2.4.4\lib\net40\LogentriesCore.dll</HintPath>
@@ -222,6 +222,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\PfmController.cs" />
+    <Compile Include="Controllers\UpdateProfileViewModel.cs" />
     <Compile Include="Filters\InitializeSimpleMembershipAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -322,7 +323,9 @@
     <Content Include="Scripts\knockout-3.1.0.debug.js" />
     <Content Include="Scripts\knockout-3.1.0.js" />
     <Content Include="Scripts\modernizr-2.7.2.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>
@@ -364,6 +367,8 @@
     <Content Include="Views\Account\Delete.cshtml" />
     <Content Include="Views\Account\_Delete.cshtml" />
     <Content Include="Views\Account\Deleted.cshtml" />
+    <Content Include="Views\Account\_UpdateProfile.cshtml" />
+    <Content Include="Views\Account\UpdateProfile.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

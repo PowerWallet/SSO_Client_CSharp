@@ -1,0 +1,12 @@
+﻿@model FinApps.SSO.MVC4.Controllers.UpdateProfileViewModel
+
+@{
+    ViewBag.Title = "Update Profile";
+}
+
+<hgroup class="title">
+    <h1>@ViewBag.Title.</h1>
+</hgroup>
+
+@Html.ValidationSummary(true)
+@Html.Partial("_UpdateProfile")

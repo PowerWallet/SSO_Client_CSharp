@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Web.Mvc;
+using FinApps.SSO.MVC4.Controllers;
 using FinApps.SSO.MVC4.Migrations;
 using FinApps.SSO.RestClient_Base.Model;
 
@@ -42,6 +43,14 @@ namespace FinApps.SSO.MVC4.Models
                 Email = user.Email,
                 FinAppsUserToken = user.FinAppsUserToken
             };
+        }
+
+        public static void UpdateFromViewModel(this UserProfile user, UpdateProfileViewModel model)
+        {
+            user.Email = model.Email;
+            user.PostalCode = model.PostalCode;
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
         }
     }
 
