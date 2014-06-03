@@ -13,13 +13,18 @@ namespace FinApps.SSO.RestClient_NET40
         #region private members and constructor
 
         private const string ApiVersion = "1";
-        private readonly string _baseUrl;
+        private readonly IGenericRestClient _genericRestClient;
 
         public FinAppsRestClient(string baseUrl, string companyIdentifier, string companyToken)
+            : this(new GenericRestClient(string.Format("{0}v{1}/", baseUrl, ApiVersion)), companyIdentifier, companyToken)
+        {
+        }
+
+        public FinAppsRestClient(IGenericRestClient genericRestClient, string companyIdentifier, string companyToken)
         {
             CompanyIdentifier = companyIdentifier;
             CompanyToken = companyToken;
-            _baseUrl = string.Format("{0}v{1}/", baseUrl, ApiVersion);
+            _genericRestClient = genericRestClient;
         }
 
         private static string UserAgent
@@ -30,6 +35,11 @@ namespace FinApps.SSO.RestClient_NET40
         private static string CompanyIdentifier { get; set; }
 
         private static string CompanyToken { get; set; }
+
+        private static string FinAppsToken
+        {
+            get { return string.Format("{0}:{1}", CompanyIdentifier, CompanyToken); }
+        }
 
         private static RestRequest CreateRestRequest(Method method, string resource)
         {
@@ -43,7 +53,7 @@ namespace FinApps.SSO.RestClient_NET40
             request.AddHeader("Accept-Encoding", "gzip, deflate");
             request.AddHeader("Accept-charset", "utf-8");
             request.AddHeader("User-Agent", UserAgent);
-            request.AddHeader("X-FinApps-Token", string.Format("{0}:{1}", CompanyIdentifier, CompanyToken));
+            request.AddHeader("X-FinApps-Token", FinAppsToken);
 
             return request;
         }
@@ -65,8 +75,7 @@ namespace FinApps.SSO.RestClient_NET40
             if (!string.IsNullOrWhiteSpace(finAppsUser.LastName)) 
                 request.AddParameter("LastName", finAppsUser.LastName);
 
-            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
-            return genericRestClient.Execute(request);
+            return _genericRestClient.Execute<FinAppsUser>(request);
         }
 
         public FinAppsUser NewSession(FinAppsCredentials credentials, string clientIp)
@@ -75,15 +84,13 @@ namespace FinApps.SSO.RestClient_NET40
             if (string.IsNullOrWhiteSpace(clientIp))
                 request.AddParameter("ClientIp", clientIp);
 
-            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
-            return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
+            return _genericRestClient.Execute<FinAppsUser>(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
         public FinAppsUser UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser)
         {
             RestRequest request = CreateRestRequest(Method.PUT, ApiUris.UpdateUserProfile);
-            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
-            return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
+            return _genericRestClient.Execute<FinAppsUser>(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
         public FinAppsUser UpdateUserPassword(FinAppsCredentials credentials, string oldPassword,
@@ -96,15 +103,13 @@ namespace FinApps.SSO.RestClient_NET40
             request.AddParameter("OldPassword", oldPassword);
             request.AddParameter("NewPassword", newPassword);
 
-            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
-            return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
+            return _genericRestClient.Execute<FinAppsUser>(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
         public FinAppsUser DeleteUser(FinAppsCredentials credentials)
         {
             RestRequest request = CreateRestRequest(Method.DELETE, ApiUris.DeleteUser);
-            var genericRestClient = new GenericRestClient<FinAppsUser>(_baseUrl);
-            return genericRestClient.Execute(request, credentials.Email, credentials.FinAppsUserToken);
+            return _genericRestClient.Execute<FinAppsUser>(request, credentials.Email, credentials.FinAppsUserToken);
         }
     }
 }
