@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using FinApps.SSO.RestClient_Base;
@@ -33,9 +34,19 @@ namespace FinApps.SSO.RestClient_NET451
             _finAppsToken = string.Format("{0}:{1}", companyIdentifier, companyToken);
         }
 
+        private static string AssemblyVersion
+        {
+            get
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                var assemblyName = new AssemblyName(assembly.FullName);
+                return assemblyName.Version.ToString();
+            }
+        }
+
         private static string UserAgent
         {
-            get { return string.Format("finapps-csharp/{0} (.NET {1})", ExecutingAssembly.AssemblyVersion, Environment.Version); }
+            get { return string.Format("finapps-csharp/{0} (.NET {1})", AssemblyVersion, Environment.Version); }
         }
 
         private static AuthenticationHeaderValue AuthenticationHeaderValue { get; set; }
