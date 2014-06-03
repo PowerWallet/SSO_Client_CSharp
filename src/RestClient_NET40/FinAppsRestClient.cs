@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using FinApps.SSO.RestClient_Base;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Model;
@@ -27,9 +28,19 @@ namespace FinApps.SSO.RestClient_NET40
             _genericRestClient = genericRestClient;
         }
 
+        private static string AssemblyVersion
+        {
+            get
+            {
+                Assembly assembly = Assembly.GetExecutingAssembly();
+                var assemblyName = new AssemblyName(assembly.FullName);
+                return assemblyName.Version.ToString();
+            }
+        }
+
         private static string UserAgent
         {
-            get { return string.Format("finapps-csharp/{0} (.NET {1})", ExecutingAssembly.AssemblyVersion, Environment.Version); }
+            get { return string.Format("finapps-csharp/{0} (.NET {1})", AssemblyVersion, Environment.Version); }
         }
 
         private static string CompanyIdentifier { get; set; }
@@ -89,7 +100,18 @@ namespace FinApps.SSO.RestClient_NET40
 
         public FinAppsUser UpdateUserProfile(FinAppsCredentials credentials, FinAppsUser finAppsUser)
         {
+            Require.Argument("Email", finAppsUser.Email);
+            Require.Argument("PostalCode", finAppsUser.PostalCode);
+
             RestRequest request = CreateRestRequest(Method.PUT, ApiUris.UpdateUserProfile);
+
+            request.AddParameter("Email", finAppsUser.Email);
+            request.AddParameter("PostalCode", finAppsUser.PostalCode);
+            if (!string.IsNullOrWhiteSpace(finAppsUser.FirstName))
+                request.AddParameter("FirstName", finAppsUser.FirstName);
+            if (!string.IsNullOrWhiteSpace(finAppsUser.LastName))
+                request.AddParameter("LastName", finAppsUser.LastName);
+
             return _genericRestClient.Execute<FinAppsUser>(request, credentials.Email, credentials.FinAppsUserToken);
         }
 
