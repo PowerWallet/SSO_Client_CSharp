@@ -23,10 +23,10 @@
                 
     FinAppsUser newUser = await _client.NewUser(user);
     if (newUser.Errors != null && newUser.Errors.Any())
-        ' handle errors
+        // handle errors
     } else {
         string userToken = newUser.UserToken;
-        ' save userToken locally
+        // save userToken locally
     }
     
 
@@ -51,10 +51,10 @@
                 
     FinAppsUser newSessionUser = await _client.NewSession(user.ToFinAppsCredentials(), Request.UserHostAddress);
     if (newSessionUser.Errors != null && newSessionUser.Errors.Any())
-        ' handle errors
+        // handle errors
     } else {
         string redirectUrl = newSessionUser.SessionRedirectUrl;
-        ' redirect to FinApps using above url
+        // redirect to FinApps using above url
     }    
       
     
@@ -86,10 +86,10 @@
                 
     FinAppsUser updatedUser = await _client.UpdateUserProfile(credentials, user);
     if (updatedUser.Errors != null && updatedUser.Errors.Any())
-        ' handle errors
+        // handle errors
     } else {
         string userToken = updatedUser.UserToken;
-        ' save userToken locally
+        // save userToken locally
     }   
     
     
@@ -114,10 +114,10 @@
                 
     FinAppsUser updatedUser = await _client.UpdateUserPassword(credentials, oldPassword, newPassword);
     if (updatedUser.Errors != null && updatedUser.Errors.Any())
-        ' handle errors
+        // handle errors
     } else {
         string userToken = updatedUser.UserToken;
-        ' save userToken locally
+        // save userToken locally
     }    
         
          
@@ -142,7 +142,7 @@
                 
     FinAppsUser deletedUser = await _client.DeleteUser(credentials);
     if (deletedUser.Errors != null && deletedUser.Errors.Any())
-        ' handle errors
+        // handle errors
     } 
     
             
