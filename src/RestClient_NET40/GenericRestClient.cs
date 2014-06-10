@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Text;
 using FinApps.SSO.RestClient_Base.Annotations;
 using FinApps.SSO.RestClient_Base.Model;
@@ -28,6 +30,22 @@ namespace FinApps.SSO.RestClient_NET40
             _restClient = new RestClient(baseUrl);
         }
 
+        private static byte[] ErrorMessageAsRawBytes(string errorMessage)
+        {
+            var errors = new
+            {
+                Errors = new List<FinAppsError>
+                {
+                    new FinAppsError
+                    {
+                        PropertyName = string.Empty,
+                        ErrorMessage = errorMessage
+                    }
+                }
+            };
+            return Encoding.UTF8.GetBytes(new JsonSerializer().Serialize(errors));
+        }
+
         public T Execute<T>(IRestRequest request, string username = null, string password = null) where T : new()
         {
             if (username != null && password != null)
@@ -42,21 +60,21 @@ namespace FinApps.SSO.RestClient_NET40
                 {
                     case ResponseStatus.TimedOut:
                     case ResponseStatus.Error:
-
-                        var errors = new
+                        resp.Content = null;
+                        resp.RawBytes = ErrorMessageAsRawBytes(resp.ErrorMessage);
+                        break;
+                    default:
+                        var apiStatusCodes = new[]
                         {
-                            Errors = new List<FinAppsError>
-                            {
-                                new FinAppsError
-                                {
-                                    PropertyName = string.Empty,
-                                    ErrorMessage = resp.ErrorMessage
-                                }
-                            }
+                            HttpStatusCode.NotFound,
+                            HttpStatusCode.Unauthorized,
+                            HttpStatusCode.InternalServerError
                         };
-                        string newJson = new JsonSerializer().Serialize(errors);
-                        resp.Content =  null;
-                        resp.RawBytes = Encoding.UTF8.GetBytes(newJson);
+                        if (apiStatusCodes.Contains(resp.StatusCode))
+                        {
+                            resp.Content = null;
+                            resp.RawBytes = ErrorMessageAsRawBytes(resp.StatusDescription);
+                        }
                         break;
                 }
             };
@@ -65,7 +83,8 @@ namespace FinApps.SSO.RestClient_NET40
             if (response.ErrorException == null)
                 return response.Data;
 
-            var exception = new ApplicationException("Error retrieving response.  Check inner details for more info.", response.ErrorException);
+            var exception = new ApplicationException("Error retrieving response.  Check inner details for more info.",
+                response.ErrorException);
             throw exception;
         }
     }
