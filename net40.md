@@ -3,7 +3,6 @@
 
 #### Create a user:
 
-    using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
     using FinApps.SSO.RestClient_NET40;
@@ -33,7 +32,6 @@
 
 #### Initiate a FinApps session:
 
-    using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
     using FinApps.SSO.RestClient_NET40;
@@ -61,7 +59,6 @@
     
 #### Update a User Profile:
 
-    using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
     using FinApps.SSO.RestClient_NET40;
@@ -95,7 +92,6 @@
     
 #### Update a User Password:
 
-    using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
     using FinApps.SSO.RestClient_NET40;
@@ -123,7 +119,6 @@
          
 #### Delete a User:
 
-    using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
     using FinApps.SSO.RestClient_NET40;
