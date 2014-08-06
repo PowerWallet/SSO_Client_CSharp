@@ -6,7 +6,7 @@
     using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
-    using FinApps.SSO.RestClient_NET451;
+    using FinApps.SSO.RestClient_NET40;
     
     var user = new FinAppsUser
             {
@@ -36,7 +36,7 @@
     using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
-    using FinApps.SSO.RestClient_NET451;
+    using FinApps.SSO.RestClient_NET40;
     
 
     var credentials = new FinAppsCredentials
@@ -64,7 +64,7 @@
     using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
-    using FinApps.SSO.RestClient_NET451;
+    using FinApps.SSO.RestClient_NET40;
     
 
     var credentials = new FinAppsCredentials
@@ -98,7 +98,7 @@
     using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
-    using FinApps.SSO.RestClient_NET451;
+    using FinApps.SSO.RestClient_NET40;
     
 
     var credentials = new FinAppsCredentials
@@ -126,7 +126,7 @@
     using FinApps.SSO.MVC5.Models;
     using FinApps.SSO.RestClient_Base.Annotations;
     using FinApps.SSO.RestClient_Base.Model;
-    using FinApps.SSO.RestClient_NET451;
+    using FinApps.SSO.RestClient_NET40;
     
 
     var credentials = new FinAppsCredentials
