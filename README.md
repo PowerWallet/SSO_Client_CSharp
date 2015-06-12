@@ -21,9 +21,7 @@ Once you have installed the NuGet extension, you can choose to install the FinAp
 
 #### Installing via the Package Manager Dialog
 
-To install a FinApps library using the Package Manager dialog, first open the dialog by right-clicking the References folder in your project and selecting the package manager option:
-
-![](https://lh4.googleusercontent.com/f7arKv3rtF3_0x8ckYwDC4d9qr3lfcHcIYROjAAI2h6StebF_szFVy_irxjDuKtUlemg2PC9uWaUKjtSuZfwPh6PatIN76BrksWaL8slscC5yDpxxtQ)
+To install a FinApps library using the Package Manager dialog, first open the dialog by right-clicking the References folder in your project and selecting the package manager option.
 
 When the package manager dialog opens simply search the online catalog for _‘FinApps’_.  The screen shot below shows the results returned from the NuGet catalog:
 
