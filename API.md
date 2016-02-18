@@ -12,7 +12,7 @@ The format of the value of the Tenant Header Field is as follows:
 
 ``CompanyIdentifier=<CompanyToken>``
 
-eg. ``X-FinApps-Token : CompanyIdentifier=CompanyToken``
+eg. ``X-FinApps-Token : acme=FgWhxtzgLzQohL1UoViMAkfdsgfghdfgdf=``
 
 
 ####User Level Authentication:
