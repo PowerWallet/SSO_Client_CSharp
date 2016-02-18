@@ -17,7 +17,7 @@ eg. ``X-FinApps-Token : acme:FgWhxtzgLzQohL1UoViMAkfdsgfghdfgdf=``
 
 ####User Level Authentication:
 
-User Level authentication, is done via the http authentication field.
+User Level authentication, is done via the http authentication header field.
 
 The http authentication field is:
 
