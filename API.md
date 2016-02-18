@@ -29,6 +29,7 @@ The format of the field is as follows:
 
 The value portion ( UserIdentifier:UserToken ) is Base64 Encoded.
 
+eg. ``Authorization : Basic dGVzdDA2MDJAZXhhbXBsZS5jb206aUNReWpGSTlTUHhGMU4xN3Q0RXZOWFQ2N0F1Rm5tWTdPWnFhNWsydWNnaz0=``
 
 
 ###Company Api 
