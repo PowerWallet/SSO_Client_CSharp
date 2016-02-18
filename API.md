@@ -27,7 +27,7 @@ The format of the field is as follows:
 
 ``Basic UserIdentifier:UserToken``
 
-The value portion ( UserIdentifier:UserToken ) is [Base64 Encoded][1].
+The value portion ( UserIdentifier:UserToken ) is [Base64][1] Encoded.
 
 eg. ``Authorization : Basic dGVzdDA2MDJAZXhhbXBsZS5jb206aUNReWpGSTlTUHhGMU4xN3Q0RXZOWFQ2N0F1Rm5tWTdPWnFhNWsydWNnaz0=``
 
